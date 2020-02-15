@@ -15,9 +15,6 @@ public class ToolSwap {
 
     public static final String MODID = "toolswap";
     public static ToolSwap instance;
-    ItemStack axe;
-    ItemStack pickaxe;
-    ItemStack shovel;
 
     public ToolSwap() {
         instance = this;
@@ -34,6 +31,9 @@ public class ToolSwap {
             PlayerEntity player = (PlayerEntity) event.getEntity();
             ItemStack heldItem = player.getHeldItemMainhand();
             if (!player.isSneaking()) {
+                ItemStack axe = null;
+                ItemStack pickaxe = null;
+                ItemStack shovel = null;
                 for (int i = 0; i < 9; i++) {
                     ItemStack stack = player.inventory.getStackInSlot(i);
                     if (stack.getToolTypes().contains(ToolType.AXE)) {
