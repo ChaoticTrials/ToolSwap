@@ -4,6 +4,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -24,6 +26,7 @@ public class ToolSwap {
 
     @SubscribeEvent
     public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
+    @OnlyIn(Dist.CLIENT)
         if (event.getEntity().getEntityWorld().getGameTime() % 3 != 0) return;
 
         BlockState state = event.getState();
