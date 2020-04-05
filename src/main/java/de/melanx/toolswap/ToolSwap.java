@@ -25,8 +25,8 @@ public class ToolSwap {
     }
 
     @SubscribeEvent
-    public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
     @OnlyIn(Dist.CLIENT)
+    public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
         if (event.getEntity().getEntityWorld().getGameTime() % 3 != 0) return;
 
         BlockState state = event.getState();
