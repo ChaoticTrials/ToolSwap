@@ -1,11 +1,11 @@
 package de.melanx.toolswap;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ToolItem;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -22,6 +22,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Mod(ToolSwap.MODID)
 public class ToolSwap {
 
@@ -29,12 +32,9 @@ public class ToolSwap {
     public static final String MOD_NAME = "Automatic Tool Swap";
     public static final Logger LOGGER = LogManager.getLogger(MODID);
     public static final KeyBinding toggle = new KeyBinding(MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, MOD_NAME);
-    public static ToolSwap instance;
     private boolean isOn = true;
 
     public ToolSwap() {
-        instance = this;
-
         ClientRegistry.registerKeyBinding(toggle);
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -67,44 +67,48 @@ public class ToolSwap {
         if (isOn) {
             if (event.getEntity().getEntityWorld().getGameTime() % 3 != 0) return;
 
+            HashMap<ToolType, ItemStack> tools = new HashMap<>();
             BlockState state = event.getState();
+            Block block = state.getBlock();
             if (event.getEntity() instanceof PlayerEntity) {
                 PlayerEntity player = (PlayerEntity) event.getEntity();
                 ItemStack heldItem = player.getHeldItemMainhand();
                 if (!player.isCrouching()) {
-                    ItemStack axe = null;
-                    ItemStack pickaxe = null;
-                    ItemStack shovel = null;
-                    ItemStack hoe = null;
+                    if (heldItem.getToolTypes().contains(block.getHarvestTool(state))) return;
                     for (int i = 0; i < 9; i++) {
                         ItemStack stack = player.inventory.getStackInSlot(i);
                         if (stack.getToolTypes().contains(ToolType.AXE)) {
-                            axe = stack;
+                            tools.put(ToolType.AXE, stack);
                         } else if (stack.getToolTypes().contains(ToolType.PICKAXE)) {
-                            pickaxe = stack;
+                            tools.put(ToolType.PICKAXE, stack);
                         } else if (stack.getToolTypes().contains(ToolType.SHOVEL)) {
-                            shovel = stack;
+                            tools.put(ToolType.SHOVEL, stack);
                         } else if (stack.getToolTypes().contains(ToolType.HOE)) {
-                            hoe = stack;
+                            tools.put(ToolType.HOE, stack);
                         }
                     }
 
-                    Material material = state.getMaterial();
-                    if ((material == Material.WOOD || material == Material.BAMBOO || material == Material.GOURD) && axe != null) {
-                        if (!(heldItem.getToolTypes().contains(ToolType.AXE))) {
-                            player.inventory.currentItem = player.inventory.getSlotFor(axe);
+                    if (tools.isEmpty()) return;
+                    ToolType toolType = block.getHarvestTool(state);
+
+                    if (toolType == null) {
+                        float blockHardness = state.getBlockHardness(player.getEntityWorld(), event.getPos());
+                        if (blockHardness > 0) {
+                            for (Map.Entry<ToolType, ItemStack> entry : tools.entrySet()) {
+                                ToolItem toolItem = (ToolItem) entry.getValue().getItem();
+                                if (entry.getValue().getDestroySpeed(state) >= toolItem.getTier().getEfficiency()) {
+                                    toolType = entry.getKey();
+                                }
+                            }
                         }
-                    } else if ((material == Material.ROCK || material == Material.IRON || material == Material.ANVIL) && pickaxe != null) {
-                        if (!(heldItem.getToolTypes().contains(ToolType.PICKAXE))) {
-                            player.inventory.currentItem = player.inventory.getSlotFor(pickaxe);
-                        }
-                    } else if ((state.getBlock() == Blocks.GRASS_BLOCK || material == Material.EARTH || material == Material.CLAY || material == Material.SAND || material == Material.SNOW || material == Material.SNOW_BLOCK) && shovel != null) {
-                        if (!(heldItem.getToolTypes().contains(ToolType.SHOVEL))) {
-                            player.inventory.currentItem = player.inventory.getSlotFor(shovel);
-                        }
-                    } else if ((material == Material.ORGANIC || material == Material.SPONGE || material == Material.LEAVES) && hoe != null) {
-                        if (!(heldItem.getToolTypes().contains(ToolType.HOE))) {
-                            player.inventory.currentItem = player.inventory.getSlotFor(hoe);
+                    }
+
+                    if (toolType != null) {
+                        for (Map.Entry<ToolType, ItemStack> entry : tools.entrySet()) {
+                            if (entry.getKey() == toolType && state.getHarvestLevel() <= ((ToolItem) entry.getValue().getItem()).getTier().getHarvestLevel()) {
+                                player.inventory.currentItem = player.inventory.getSlotFor(entry.getValue());
+                                break;
+                            }
                         }
                     }
                 }
