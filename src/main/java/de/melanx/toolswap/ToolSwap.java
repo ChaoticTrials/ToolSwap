@@ -6,7 +6,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.Color;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -48,11 +47,11 @@ public class ToolSwap {
             TranslationTextComponent on_off;
             if (isOn) {
                 TranslationTextComponent on = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification.state_on");
-                on.func_230530_a_(Style.field_240709_b_.func_240718_a_(Color.func_240744_a_(TextFormatting.GREEN)));
+                on.func_230530_a_(Style.field_240709_b_.func_240712_a_(TextFormatting.GREEN));
                 on_off = on;
             } else {
                 TranslationTextComponent off = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification.state_off");
-                off.func_230530_a_(Style.field_240709_b_.func_240718_a_(Color.func_240744_a_(TextFormatting.DARK_RED)));
+                off.func_230530_a_(Style.field_240709_b_.func_240712_a_(TextFormatting.DARK_RED));
                 on_off = off;
             }
             TranslationTextComponent statusMessage = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification", isOn);
@@ -76,7 +75,7 @@ public class ToolSwap {
                     ItemStack axe = null;
                     ItemStack pickaxe = null;
                     ItemStack shovel = null;
-//                    ItemStack hoe = null;
+                    ItemStack hoe = null;
                     for (int i = 0; i < 9; i++) {
                         ItemStack stack = player.inventory.getStackInSlot(i);
                         if (stack.getToolTypes().contains(ToolType.AXE)) {
@@ -85,8 +84,8 @@ public class ToolSwap {
                             pickaxe = stack;
                         } else if (stack.getToolTypes().contains(ToolType.SHOVEL)) {
                             shovel = stack;
-//                        } else if (stack.getToolTypes().contains(ToolType.get("hoe"))) { // todo implement when forge merges
-//                            hoe = stack;
+                        } else if (stack.getToolTypes().contains(ToolType.HOE)) {
+                            hoe = stack;
                         }
                     }
 
@@ -103,10 +102,10 @@ public class ToolSwap {
                         if (!(heldItem.getToolTypes().contains(ToolType.SHOVEL))) {
                             player.inventory.currentItem = player.inventory.getSlotFor(shovel);
                         }
-//                    } else if ((material == Material.ORGANIC || material == Material.SPONGE || material == Material.LEAVES) && hoe != null) {
-//                        if (!(heldItem.getToolTypes().contains(ToolType.HOE))) {
-//                            player.inventory.currentItem = player.inventory.getSlotFor(hoe);
-//                        }
+                    } else if ((material == Material.ORGANIC || material == Material.SPONGE || material == Material.LEAVES) && hoe != null) {
+                        if (!(heldItem.getToolTypes().contains(ToolType.HOE))) {
+                            player.inventory.currentItem = player.inventory.getSlotFor(hoe);
+                        }
                     }
                 }
             }
