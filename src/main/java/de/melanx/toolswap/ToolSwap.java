@@ -47,15 +47,15 @@ public class ToolSwap {
             TranslationTextComponent on_off;
             if (isOn) {
                 TranslationTextComponent on = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification.state_on");
-                on.func_230530_a_(Style.field_240709_b_.func_240712_a_(TextFormatting.GREEN));
+                on.mergeStyle(Style.EMPTY.setFormatting(TextFormatting.GREEN));
                 on_off = on;
             } else {
                 TranslationTextComponent off = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification.state_off");
-                off.func_230530_a_(Style.field_240709_b_.func_240712_a_(TextFormatting.DARK_RED));
+                off.mergeStyle(Style.EMPTY.setFormatting(TextFormatting.DARK_RED));
                 on_off = off;
             }
             TranslationTextComponent statusMessage = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification", isOn);
-            statusMessage.func_240702_b_(": ").func_230529_a_(on_off);
+            statusMessage.appendString(": ").append(on_off);
             event.player.sendStatusMessage(statusMessage, true);
             LOGGER.debug("Set tool swap mode to " + isOn);
         }
