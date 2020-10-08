@@ -18,10 +18,16 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLPaths;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,20 +38,35 @@ public class ToolSwap {
     public static final String MOD_NAME = "Automatic Tool Swap";
     public static final Logger LOGGER = LogManager.getLogger(MODID);
     public static final KeyBinding toggle = new KeyBinding(MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, MOD_NAME);
-    private boolean isOn = true;
+    private static final File config = FMLPaths.CONFIGDIR.get().resolve("." + MODID).toFile();
 
     public ToolSwap() {
         ClientRegistry.registerKeyBinding(toggle);
         MinecraftForge.EVENT_BUS.register(this);
+        try {
+            if (!config.exists()) {
+                config.createNewFile();
+            }
+            boolean isOn = !getContent().equals("0");
+            FileWriter writer = new FileWriter(config);
+            if (isOn) {
+                writer.write("1");
+            } else {
+                writer.write("0");
+            }
+            writer.close();
+        } catch (IOException e) {
+            LOGGER.warn(e);
+        }
     }
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onWorldTick(TickEvent.PlayerTickEvent event) {
         if (toggle.isPressed()) {
-            isOn = !isOn;
+            toggleMode();
             TranslationTextComponent on_off;
-            if (isOn) {
+            if (isOn()) {
                 TranslationTextComponent on = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification.state_on");
                 on.mergeStyle(Style.EMPTY.setFormatting(TextFormatting.GREEN));
                 on_off = on;
@@ -54,17 +75,17 @@ public class ToolSwap {
                 off.mergeStyle(Style.EMPTY.setFormatting(TextFormatting.DARK_RED));
                 on_off = off;
             }
-            TranslationTextComponent statusMessage = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification", isOn);
+            TranslationTextComponent statusMessage = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification", isOn());
             statusMessage.appendString(": ").append(on_off);
             event.player.sendStatusMessage(statusMessage, true);
-            LOGGER.debug("Set tool swap mode to " + isOn);
+            LOGGER.debug("Set tool swap mode to " + isOn());
         }
     }
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
-        if (isOn) {
+        if (isOn()) {
             if (event.getEntity().getEntityWorld().getGameTime() % 3 != 0) return;
 
             HashMap<ToolType, ItemStack> tools = new HashMap<>();
@@ -114,5 +135,36 @@ public class ToolSwap {
                 }
             }
         }
+    }
+
+    private void toggleMode() {
+        try {
+            FileInputStream stream = new FileInputStream(config);
+            String setting = IOUtils.toString(stream);
+            FileWriter writer = new FileWriter(config);
+            if (setting.equals("1")) {
+                writer.write("0");
+            } else {
+                writer.write("1");
+            }
+            writer.close();
+        } catch (IOException e) {
+            LOGGER.warn(e);
+        }
+    }
+
+    private boolean isOn() {
+        return getContent().equals("1");
+    }
+
+    private String getContent() {
+        try {
+            FileInputStream stream = new FileInputStream(config);
+            String setting = IOUtils.toString(stream);
+            return setting.trim();
+        } catch (IOException e) {
+            LOGGER.warn(e);
+        }
+        return "";
     }
 }
