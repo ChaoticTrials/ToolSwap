@@ -3,10 +3,15 @@ package de.melanx.toolswap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.PlayerController;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -21,6 +26,7 @@ import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.network.FMLNetworkConstants;
@@ -43,12 +49,15 @@ public class ToolSwap {
     public static final String MODID = "toolswap";
     public static final String MOD_NAME = "Automatic Tool Swap";
     public static final Logger LOGGER = LogManager.getLogger(MODID);
+    public static final ITextComponent WARNING = getWarningComponent();
     public static final KeyBinding toggle = new KeyBinding(MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, MOD_NAME);
     private static final File config = FMLPaths.CONFIGDIR.get().resolve("." + MODID).toFile();
     private static int prevSlot = -1;
     private static int cooldown = 0;
 
     public ToolSwap() {
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
+        ClientConfig.loadConfig(ClientConfig.CLIENT_CONFIG, FMLPaths.CONFIGDIR.get().resolve(MODID + "-client.toml"));
         ClientRegistry.registerKeyBinding(toggle);
         MinecraftForge.EVENT_BUS.register(this);
         try {
@@ -98,18 +107,36 @@ public class ToolSwap {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
-        if (isOn()) {
-            if (cooldown <= 0) {
-                HashMap<ToolType, ItemStack> tools = new HashMap<>();
-                BlockState state = event.getState();
-                Block block = state.getBlock();
-                if (event.getEntity() instanceof PlayerEntity) {
-                    PlayerEntity player = (PlayerEntity) event.getEntity();
-                    ItemStack heldItem = player.getHeldItemMainhand();
+        if (event.getEntity() instanceof PlayerEntity) {
+            PlayerEntity player = (PlayerEntity) event.getEntity();
+            ItemStack heldItem = player.getHeldItemMainhand();
+            if (toolAboutBreaking(heldItem)) {
+                PlayerController controller = Minecraft.getInstance().playerController;
+                Container container = player.openContainer;
+                int emptySlot = -1;
+                for (Slot slot : container.inventorySlots) {
+                    if (slot.slotNumber > 8 && slot.getStack().isEmpty()) {
+                        emptySlot = slot.slotNumber;
+                    }
+                }
+
+                if (emptySlot != -1) {
+                    controller.windowClick(container.windowId, player.inventory.currentItem + 36, 0, ClickType.PICKUP, player);
+                    controller.windowClick(container.windowId, emptySlot, 0, ClickType.PICKUP, player);
+                } else {
+                    player.sendStatusMessage(WARNING, true);
+                }
+            }
+            if (isOn()) {
+                if (cooldown <= 0) {
+                    HashMap<ToolType, ItemStack> tools = new HashMap<>();
+                    BlockState state = event.getState();
+                    Block block = state.getBlock();
                     if (!player.isCrouching()) {
                         if (heldItem.getToolTypes().contains(block.getHarvestTool(state))) return;
                         for (int i = 0; i < 9; i++) {
                             ItemStack stack = player.inventory.getStackInSlot(i);
+                            if (toolAboutBreaking(stack)) continue;
                             if (stack.getToolTypes().contains(ToolType.AXE)) {
                                 tools.put(ToolType.AXE, stack);
                             } else if (stack.getToolTypes().contains(ToolType.PICKAXE)) {
@@ -148,9 +175,9 @@ public class ToolSwap {
                             }
                         }
                     }
+                } else {
+                    cooldown--;
                 }
-            } else {
-                cooldown--;
             }
         }
     }
@@ -163,6 +190,10 @@ public class ToolSwap {
             prevSlot = -1;
             cooldown = 5;
         }
+    }
+
+    private boolean toolAboutBreaking(ItemStack stack) {
+        return ClientConfig.saveBreakingTools.get() && stack.isDamageable() && stack.getDamage() == stack.getMaxDamage() - 1;
     }
 
     private void toggleMode() {
@@ -194,5 +225,11 @@ public class ToolSwap {
             LOGGER.warn(e);
         }
         return "";
+    }
+
+    private static ITextComponent getWarningComponent() {
+        TranslationTextComponent component = new TranslationTextComponent(MODID + ".warning");
+        component.mergeStyle(TextFormatting.DARK_RED);
+        return component;
     }
 }

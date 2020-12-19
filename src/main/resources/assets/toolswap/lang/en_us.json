@@ -2,5 +2,6 @@
   "toolswap.key.toggle_toolswap_mode": "Toggle tool swap mode",
   "toolswap.key.toggle_toolswap_notification": "Tool swap mode",
   "toolswap.key.toggle_toolswap_notification.state_on": "on",
-  "toolswap.key.toggle_toolswap_notification.state_off": "off"
+  "toolswap.key.toggle_toolswap_notification.state_off": "off",
+  "toolswap.warning": "NO EMPTY SLOT FOR SAVING BREAKING TOOL"
 }

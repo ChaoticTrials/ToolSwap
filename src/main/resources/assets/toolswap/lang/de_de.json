@@ -2,5 +2,6 @@
   "toolswap.key.toggle_toolswap_mode": "Werkzeugwechselmodus umschalten",
   "toolswap.key.toggle_toolswap_notification": "Werkzeugwechselmodus",
   "toolswap.key.toggle_toolswap_notification.state_on": "ein",
-  "toolswap.key.toggle_toolswap_notification.state_off": "aus"
+  "toolswap.key.toggle_toolswap_notification.state_off": "aus",
+  "toolswap.warning": "KEIN FREIER SLOT, UM ZERBRECHENDES ITEM ZU RETTEN"
 }
