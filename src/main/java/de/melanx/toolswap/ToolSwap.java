@@ -55,6 +55,7 @@ public class ToolSwap {
     private static final File config = FMLPaths.CONFIGDIR.get().resolve("." + MODID).toFile();
     private static int prevSlot = -1;
     private static int cooldown = 0;
+    private static boolean toggleState = false;
 
     public ToolSwap() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
@@ -65,9 +66,9 @@ public class ToolSwap {
             if (!config.exists()) {
                 config.createNewFile();
             }
-            boolean isOn = !getContent().equals("0");
+            toggleState = !getContent().equals("0");
             FileWriter writer = new FileWriter(config);
-            if (isOn) {
+            if (toggleState) {
                 writer.write("1");
             } else {
                 writer.write("0");
@@ -89,7 +90,7 @@ public class ToolSwap {
         if (toggle.isPressed()) {
             toggleMode();
             TranslationTextComponent on_off;
-            if (isOn()) {
+            if (toggleState) {
                 TranslationTextComponent on = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification.state_on");
                 on.mergeStyle(Style.EMPTY.setFormatting(TextFormatting.GREEN));
                 on_off = on;
@@ -98,10 +99,10 @@ public class ToolSwap {
                 off.mergeStyle(Style.EMPTY.setFormatting(TextFormatting.DARK_RED));
                 on_off = off;
             }
-            TranslationTextComponent statusMessage = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification", isOn());
+            TranslationTextComponent statusMessage = new TranslationTextComponent(MODID + ".key.toggle_toolswap_notification", toggleState);
             statusMessage.appendString(": ").append(on_off);
             event.player.sendStatusMessage(statusMessage, true);
-            LOGGER.debug("Set tool swap mode to " + isOn());
+            LOGGER.debug("Set tool swap mode to " + toggleState);
         }
     }
 
@@ -128,7 +129,7 @@ public class ToolSwap {
                     player.sendStatusMessage(WARNING, true);
                 }
             }
-            if (isOn()) {
+            if (toggleState) {
                 if (cooldown <= 0) {
                     List<ToolEntry> tools = new ArrayList<>();
                     BlockState state = event.getState();
@@ -204,17 +205,15 @@ public class ToolSwap {
             FileWriter writer = new FileWriter(config);
             if (setting.equals("1")) {
                 writer.write("0");
+                toggleState = false;
             } else {
                 writer.write("1");
+                toggleState = true;
             }
             writer.close();
         } catch (IOException e) {
             LOGGER.warn(e);
         }
-    }
-
-    private boolean isOn() {
-        return getContent().equals("1");
     }
 
     private String getContent() {
