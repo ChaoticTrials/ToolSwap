@@ -16,10 +16,13 @@ public class ClientConfig {
     }
 
     public static ForgeConfigSpec.BooleanValue saveBreakingTools;
+    public static ForgeConfigSpec.BooleanValue ignoreHarvestLevel;
 
     public static void init(ForgeConfigSpec.Builder builder) {
         saveBreakingTools = builder.comment("If this is on, tool with 1 durability left will be saved. [WIP - at the moment only working for axes, hoes, pickaxes and shovels for BREAKING a block]")
                 .define("save", true);
+        ignoreHarvestLevel = builder.comment("If this is on, harvest level of tools will be ignored on breaking blocks. Otherwise it will always search for the lowest possible tool.")
+                .define("ignore_harvest_level", false);
     }
 
     public static void loadConfig(ForgeConfigSpec spec, Path path) {
