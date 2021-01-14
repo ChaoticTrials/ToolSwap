@@ -41,7 +41,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 @Mod(ToolSwap.MODID)
 public class ToolSwap {
@@ -113,21 +115,7 @@ public class ToolSwap {
             PlayerEntity player = (PlayerEntity) event.getEntity();
             ItemStack heldItem = player.getHeldItemMainhand();
             if (toolAboutBreaking(heldItem)) {
-                PlayerController controller = Minecraft.getInstance().playerController;
-                Container container = player.openContainer;
-                int emptySlot = -1;
-                for (Slot slot : container.inventorySlots) {
-                    if (slot.slotNumber > 8 && slot.getStack().isEmpty()) {
-                        emptySlot = slot.slotNumber;
-                    }
-                }
-
-                if (emptySlot != -1) {
-                    controller.windowClick(container.windowId, player.inventory.currentItem + 36, 0, ClickType.PICKUP, player);
-                    controller.windowClick(container.windowId, emptySlot, 0, ClickType.PICKUP, player);
-                } else {
-                    player.sendStatusMessage(WARNING, true);
-                }
+                saveItem(player);
             }
             if (toggleState) {
                 if (cooldown <= 0) {
@@ -137,7 +125,7 @@ public class ToolSwap {
                     if (!player.isCrouching()) {
                         if (heldItem.getToolTypes().contains(block.getHarvestTool(state)) &&
                                 (ClientConfig.ignoreHarvestLevel.get() || heldItem.getItem() instanceof ToolItem &&
-                                ((ToolItem) heldItem.getItem()).getTier().getHarvestLevel() == state.getHarvestLevel()))
+                                        ((ToolItem) heldItem.getItem()).getTier().getHarvestLevel() == state.getHarvestLevel()))
                             return;
 
                         for (int i = 0; i < 9; i++) {
@@ -186,11 +174,10 @@ public class ToolSwap {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void onBlockBreak(TickEvent.PlayerTickEvent event) {
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        PlayerEntity player = event.player;
         if (prevSlot != -1 && event.side.isClient() && !Minecraft.getInstance().gameSettings.keyBindAttack.isKeyDown()) {
-            event.player.inventory.currentItem = prevSlot;
-            prevSlot = -1;
-            cooldown = 5;
+            resetCurrentSlot(player);
         }
     }
 
@@ -198,7 +185,33 @@ public class ToolSwap {
         return ClientConfig.saveBreakingTools.get() && stack.isDamageable() && stack.getDamage() == stack.getMaxDamage() - 1;
     }
 
-    private void toggleMode() {
+    private static void saveItem(PlayerEntity player) {
+        PlayerController controller = Minecraft.getInstance().playerController;
+        Container container = player.openContainer;
+        int emptySlot = -1;
+        for (Slot slot : container.inventorySlots) {
+            if (slot.slotNumber > 9 && slot.getStack().isEmpty()) {
+                emptySlot = slot.slotNumber;
+            }
+        }
+
+        if (emptySlot != -1) {
+            controller.windowClick(container.windowId, player.inventory.currentItem + 36, 0, ClickType.PICKUP, player);
+            controller.windowClick(container.windowId, emptySlot, 0, ClickType.PICKUP, player);
+        } else {
+            player.sendStatusMessage(WARNING, true);
+        }
+    }
+
+    private static void resetCurrentSlot(PlayerEntity player) {
+        if (prevSlot >= 0) {
+            player.inventory.currentItem = prevSlot;
+            prevSlot = -1;
+            cooldown = 5;
+        }
+    }
+
+    private static void toggleMode() {
         try {
             FileInputStream stream = new FileInputStream(config);
             String setting = IOUtils.toString(stream);
