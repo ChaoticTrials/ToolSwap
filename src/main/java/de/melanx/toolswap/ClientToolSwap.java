@@ -1,6 +1,7 @@
 package de.melanx.toolswap;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
@@ -127,9 +128,56 @@ public class ClientToolSwap {
                                 }
                             });
                         }
-                        tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                        List<ToolEntry> finalToolList = new ArrayList<>();
+                        switch (ClientConfig.sortType.get()) {
+                            case LEVEL:
+                                tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                                finalToolList = tools;
+                                break;
+                            case LEVEL_INVERTED:
+                                tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                                finalToolList = Lists.reverse(tools);
+                                break;
+                            case RIGHT_TO_LEFT:
+                                finalToolList = Lists.reverse(tools);
+                                break;
+                            case ENCHANTED_FIRST:
+                                List<ToolEntry> enchanted = new ArrayList<>();
+                                List<ToolEntry> unenchanted = new ArrayList<>();
+                                tools.forEach(toolEntry -> {
+                                    if (toolEntry.getStack().isEnchanted()) {
+                                        enchanted.add(toolEntry);
+                                    } else {
+                                        unenchanted.add(toolEntry);
+                                    }
+                                });
+                                enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                                finalToolList.addAll(Lists.reverse(enchanted));
+                                unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                                finalToolList.addAll(Lists.reverse(unenchanted));
+                                break;
+                            case ENCHANTED_LAST:
+                                List<ToolEntry> enchanted1 = new ArrayList<>();
+                                List<ToolEntry> unenchanted1 = new ArrayList<>();
+                                tools.forEach(toolEntry -> {
+                                    if (toolEntry.getStack().isEnchanted()) {
+                                        enchanted1.add(toolEntry);
+                                    } else {
+                                        unenchanted1.add(toolEntry);
+                                    }
+                                });
+                                unenchanted1.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                                finalToolList.addAll(Lists.reverse(unenchanted1));
+                                enchanted1.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                                finalToolList.addAll(Lists.reverse(enchanted1));
+                                break;
+                            default: // LEFT_TO_RIGHT
+                                finalToolList = tools;
+                                break;
+                        }
 
-                        if (tools.isEmpty()) return;
+
+                        if (finalToolList.isEmpty()) return;
                         ToolType toolType = block.getHarvestTool(state);
                         if (prevSlot == -1) {
                             prevSlot = player.inventory.currentItem;
@@ -138,7 +186,7 @@ public class ClientToolSwap {
                         if (toolType == null) {
                             float blockHardness = state.getBlockHardness(player.getEntityWorld(), event.getPos());
                             if (blockHardness > 0) {
-                                for (ToolEntry entry : tools) {
+                                for (ToolEntry entry : finalToolList) {
                                     if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {
                                         toolType = entry.getType();
                                     }
@@ -147,7 +195,7 @@ public class ClientToolSwap {
                         }
 
                         if (toolType != null) {
-                            for (ToolEntry entry : tools) {
+                            for (ToolEntry entry : finalToolList) {
                                 if (entry.getType() == toolType && state.getHarvestLevel() <= entry.getHarvestLevel()) {
                                     player.inventory.currentItem = player.inventory.getSlotFor(entry.getStack());
                                     break;
