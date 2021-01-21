@@ -31,8 +31,7 @@ public class ToolSwap {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
     }
 
-    @SubscribeEvent
-    public void setup(FMLCommonSetupEvent event) {
+    private void setup(FMLCommonSetupEvent event) {
         ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST, () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
     }
 }
