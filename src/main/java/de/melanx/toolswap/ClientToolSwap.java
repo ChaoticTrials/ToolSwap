@@ -225,7 +225,17 @@ public class ClientToolSwap {
                         for (ToolEntry entry : finalToolList) {
                             if (entry.getType() == toolType && state.getHarvestLevel() <= entry.getHarvestLevel()) {
                                 player.inventory.currentItem = player.inventory.getSlotFor(entry.getStack());
-                                break;
+                                return;
+                            }
+                        }
+                    }
+
+                    if (heldItem.getItem().isDamageable()) {
+                        for (int i = 0; i < 9; i++) {
+                            ItemStack stack = player.inventory.getStackInSlot(i);
+                            if (!stack.getItem().isDamageable()) {
+                                player.inventory.currentItem = i;
+                                return;
                             }
                         }
                     }
