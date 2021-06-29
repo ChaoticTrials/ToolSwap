@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerController;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
@@ -49,7 +50,6 @@ public class ClientToolSwap {
     private static final ImmutableList<ToolType> TOOL_TYPES = ImmutableList.of(ToolType.AXE, ToolType.HOE, ToolType.PICKAXE, ToolType.SHOVEL);
     private static final File CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("." + ToolSwap.MODID).toFile();
     private static int PREV_SLOT = -1;
-    private static int COOLDOWN = 0;
     private static boolean TOGGLE_STATE = false;
     public static TranslationTextComponent WARNING;
 
@@ -83,7 +83,7 @@ public class ClientToolSwap {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void onWorldTick(TickEvent.PlayerTickEvent event) {
+    public void onWorldTick(TickEvent.ClientTickEvent event) {
         if (TOGGLE.isPressed()) {
             ClientToolSwap.toggleMode();
             TranslationTextComponent on_off;
@@ -98,7 +98,9 @@ public class ClientToolSwap {
             }
             TranslationTextComponent statusMessage = new TranslationTextComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification", TOGGLE_STATE);
             statusMessage.appendString(": ").append(on_off);
-            event.player.sendStatusMessage(statusMessage, true);
+            if (Minecraft.getInstance().player != null) {
+                Minecraft.getInstance().player.sendStatusMessage(statusMessage, true);
+            }
             LOGGER.debug("Set tool swap mode to " + TOGGLE_STATE);
         }
     }
@@ -112,102 +114,100 @@ public class ClientToolSwap {
             if (ClientToolSwap.toolAboutBreaking(heldItem)) {
                 ClientToolSwap.saveItem(player);
             }
-            if (TOGGLE_STATE) {
-                if (COOLDOWN <= 0) {
-                    List<ToolEntry> tools = new ArrayList<>();
-                    BlockState state = event.getState();
-                    Block block = state.getBlock();
-                    if (!player.isCrouching()) {
-                        if (heldItem.getToolTypes().contains(block.getHarvestTool(state)) &&
-                                (ClientConfig.ignoreHarvestLevel.get() || heldItem.getItem() instanceof ToolItem &&
-                                        ((ToolItem) heldItem.getItem()).getTier().getHarvestLevel() == state.getHarvestLevel()))
-                            return;
 
-                        for (int i = 0; i < 9; i++) {
-                            ItemStack stack = player.inventory.getStackInSlot(i);
-                            if (ClientToolSwap.toolAboutBreaking(stack)) continue;
-                            TOOL_TYPES.forEach(type -> {
-                                if (stack.getToolTypes().contains(type)) {
-                                    tools.add(new ToolEntry(type, stack));
+            if (TOGGLE_STATE) {
+                List<ToolEntry> tools = new ArrayList<>();
+                BlockState state = event.getState();
+                Block block = state.getBlock();
+                if (!player.isCrouching()) {
+                    if (heldItem.getToolTypes().contains(block.getHarvestTool(state))
+                            && (ClientConfig.ignoreHarvestLevel.get() || heldItem.getItem() instanceof ToolItem
+                            && ((ToolItem) heldItem.getItem()).getTier().getHarvestLevel() == state.getHarvestLevel())) {
+                        return;
+                    }
+
+                    for (int i = 0; i < 9; i++) {
+                        ItemStack stack = player.inventory.getStackInSlot(i);
+                        if (ClientToolSwap.toolAboutBreaking(stack)) continue;
+                        TOOL_TYPES.forEach(type -> {
+                            if (stack.getToolTypes().contains(type)) {
+                                tools.add(new ToolEntry(type, stack));
+                            }
+                        });
+                    }
+                    List<ToolEntry> finalToolList = new ArrayList<>();
+                    switch (ClientConfig.sortType.get()) {
+                        case LEVEL:
+                            tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                            finalToolList = tools;
+                            break;
+                        case LEVEL_INVERTED:
+                            tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                            finalToolList = Lists.reverse(tools);
+                            break;
+                        case RIGHT_TO_LEFT:
+                            finalToolList = Lists.reverse(tools);
+                            break;
+                        case ENCHANTED_FIRST:
+                            List<ToolEntry> enchanted = new ArrayList<>();
+                            List<ToolEntry> unenchanted = new ArrayList<>();
+                            tools.forEach(toolEntry -> {
+                                if (toolEntry.getStack().isEnchanted()) {
+                                    enchanted.add(toolEntry);
+                                } else {
+                                    unenchanted.add(toolEntry);
                                 }
                             });
-                        }
-                        List<ToolEntry> finalToolList = new ArrayList<>();
-                        switch (ClientConfig.sortType.get()) {
-                            case LEVEL:
-                                tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                                finalToolList = tools;
-                                break;
-                            case LEVEL_INVERTED:
-                                tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                                finalToolList = Lists.reverse(tools);
-                                break;
-                            case RIGHT_TO_LEFT:
-                                finalToolList = Lists.reverse(tools);
-                                break;
-                            case ENCHANTED_FIRST:
-                                List<ToolEntry> enchanted = new ArrayList<>();
-                                List<ToolEntry> unenchanted = new ArrayList<>();
-                                tools.forEach(toolEntry -> {
-                                    if (toolEntry.getStack().isEnchanted()) {
-                                        enchanted.add(toolEntry);
-                                    } else {
-                                        unenchanted.add(toolEntry);
-                                    }
-                                });
-                                enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                                finalToolList.addAll(Lists.reverse(enchanted));
-                                unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                                finalToolList.addAll(Lists.reverse(unenchanted));
-                                break;
-                            case ENCHANTED_LAST:
-                                List<ToolEntry> enchanted1 = new ArrayList<>();
-                                List<ToolEntry> unenchanted1 = new ArrayList<>();
-                                tools.forEach(toolEntry -> {
-                                    if (toolEntry.getStack().isEnchanted()) {
-                                        enchanted1.add(toolEntry);
-                                    } else {
-                                        unenchanted1.add(toolEntry);
-                                    }
-                                });
-                                unenchanted1.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                                finalToolList.addAll(Lists.reverse(unenchanted1));
-                                enchanted1.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                                finalToolList.addAll(Lists.reverse(enchanted1));
-                                break;
-                            default: // LEFT_TO_RIGHT
-                                finalToolList = tools;
-                                break;
-                        }
-
-                        if (finalToolList.isEmpty()) return;
-                        ToolType toolType = block.getHarvestTool(state);
-                        if (PREV_SLOT == -1) {
-                            PREV_SLOT = player.inventory.currentItem;
-                        }
-
-                        if (toolType == null) {
-                            float blockHardness = state.getBlockHardness(player.getEntityWorld(), event.getPos());
-                            if (blockHardness > 0) {
-                                for (ToolEntry entry : finalToolList) {
-                                    if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {
-                                        toolType = entry.getType();
-                                    }
+                            enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                            finalToolList.addAll(Lists.reverse(enchanted));
+                            unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                            finalToolList.addAll(Lists.reverse(unenchanted));
+                            break;
+                        case ENCHANTED_LAST:
+                            List<ToolEntry> enchanted1 = new ArrayList<>();
+                            List<ToolEntry> unenchanted1 = new ArrayList<>();
+                            tools.forEach(toolEntry -> {
+                                if (toolEntry.getStack().isEnchanted()) {
+                                    enchanted1.add(toolEntry);
+                                } else {
+                                    unenchanted1.add(toolEntry);
                                 }
-                            }
-                        }
+                            });
+                            unenchanted1.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                            finalToolList.addAll(Lists.reverse(unenchanted1));
+                            enchanted1.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                            finalToolList.addAll(Lists.reverse(enchanted1));
+                            break;
+                        default: // LEFT_TO_RIGHT
+                            finalToolList = tools;
+                            break;
+                    }
 
-                        if (toolType != null) {
+                    if (finalToolList.isEmpty()) return;
+                    ToolType toolType = block.getHarvestTool(state);
+                    if (PREV_SLOT == -1) {
+                        PREV_SLOT = player.inventory.currentItem;
+                    }
+
+                    if (toolType == null) {
+                        float blockHardness = state.getBlockHardness(player.getEntityWorld(), event.getPos());
+                        if (blockHardness > 0) {
                             for (ToolEntry entry : finalToolList) {
-                                if (entry.getType() == toolType && state.getHarvestLevel() <= entry.getHarvestLevel()) {
-                                    player.inventory.currentItem = player.inventory.getSlotFor(entry.getStack());
-                                    break;
+                                if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {
+                                    toolType = entry.getType();
                                 }
                             }
                         }
                     }
-                } else {
-                    COOLDOWN--;
+
+                    if (toolType != null) {
+                        for (ToolEntry entry : finalToolList) {
+                            if (entry.getType() == toolType && state.getHarvestLevel() <= entry.getHarvestLevel()) {
+                                player.inventory.currentItem = player.inventory.getSlotFor(entry.getStack());
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -223,16 +223,26 @@ public class ClientToolSwap {
     }
 
     private static boolean toolAboutBreaking(ItemStack stack) {
-        return ClientConfig.saveBreakingTools.get() && stack.isDamageable() && stack.getDamage() == stack.getMaxDamage() - 1;
+        return ClientConfig.saveBreakingTools.get() && stack.isDamageable() && stack.getDamage() == stack.getMaxDamage() - ClientConfig.minDurability.get();
     }
 
     private static void saveItem(PlayerEntity player) {
         PlayerController controller = Minecraft.getInstance().playerController;
         Container container = player.openContainer;
         int emptySlot = -1;
-        for (Slot slot : container.inventorySlots) {
-            if (slot.slotNumber > 9 && slot.getStack().isEmpty()) {
-                emptySlot = slot.slotNumber;
+
+        ItemStack currentTool = player.inventory.getStackInSlot(player.inventory.currentItem);
+        ItemStack equalTool = ClientToolSwap.findEqualTool(player.inventory, currentTool);
+        if (currentTool != equalTool) {
+            emptySlot = player.inventory.getSlotFor(equalTool);
+        }
+
+        if (emptySlot == -1) {
+            for (Slot slot : container.inventorySlots) {
+                if (slot.slotNumber > 9 && slot.getStack().isEmpty()) {
+                    emptySlot = slot.slotNumber;
+                    break;
+                }
             }
         }
 
@@ -245,11 +255,24 @@ public class ClientToolSwap {
         }
     }
 
+    private static ItemStack findEqualTool(PlayerInventory inventory, ItemStack stack) {
+        if (stack.getItem().getToolTypes(stack).isEmpty()) {
+            return stack;
+        }
+
+        for (ItemStack item : inventory.mainInventory) {
+            if (item.isItemEqualIgnoreDurability(stack) && !ClientToolSwap.toolAboutBreaking(item)) {
+                return item;
+            }
+        }
+
+        return stack;
+    }
+
     private static void resetCurrentSlot(PlayerEntity player) {
         if (PREV_SLOT >= 0) {
             player.inventory.currentItem = PREV_SLOT;
             PREV_SLOT = -1;
-            COOLDOWN = 5;
         }
     }
 
