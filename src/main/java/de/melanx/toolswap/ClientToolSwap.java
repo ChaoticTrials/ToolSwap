@@ -13,7 +13,6 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -46,27 +45,32 @@ import java.util.List;
 public class ClientToolSwap {
 
     public static final Logger LOGGER = LogManager.getLogger(ClientToolSwap.class);
-    public static final String MOD_NAME = "Automatic Tool Swap";
-    public static final ITextComponent WARNING = getWarningComponent();
-    public static final KeyBinding toggle = new KeyBinding(ToolSwap.MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, MOD_NAME);
+    public static final KeyBinding TOGGLE = new KeyBinding(ToolSwap.MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, "Automatic Tool Swap");
     private static final ImmutableList<ToolType> TOOL_TYPES = ImmutableList.of(ToolType.AXE, ToolType.HOE, ToolType.PICKAXE, ToolType.SHOVEL);
-    private static final File config = FMLPaths.CONFIGDIR.get().resolve("." + ToolSwap.MODID).toFile();
-    private static int prevSlot = -1;
-    private static int cooldown = 0;
-    private static boolean toggleState = false;
-    
+    private static final File CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("." + ToolSwap.MODID).toFile();
+    private static int PREV_SLOT = -1;
+    private static int COOLDOWN = 0;
+    private static boolean TOGGLE_STATE = false;
+    public static TranslationTextComponent WARNING;
+
+    static {
+        WARNING = new TranslationTextComponent(ToolSwap.MODID + ".warning");
+        WARNING.mergeStyle(TextFormatting.DARK_RED);
+    }
+
     public ClientToolSwap() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
         ClientConfig.loadConfig(ClientConfig.CLIENT_CONFIG, FMLPaths.CONFIGDIR.get().resolve(ToolSwap.MODID + "-client.toml"));
-        ClientRegistry.registerKeyBinding(toggle);
+        ClientRegistry.registerKeyBinding(TOGGLE);
         MinecraftForge.EVENT_BUS.register(this);
         try {
-            if (!config.exists()) {
-                config.createNewFile();
+            if (!CONFIG_FILE.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                CONFIG_FILE.createNewFile();
             }
-            toggleState = !getContent().equals("0");
-            FileWriter writer = new FileWriter(config);
-            if (toggleState) {
+            TOGGLE_STATE = !ClientToolSwap.getContent().equals("0");
+            FileWriter writer = new FileWriter(CONFIG_FILE);
+            if (TOGGLE_STATE) {
                 writer.write("1");
             } else {
                 writer.write("0");
@@ -80,10 +84,10 @@ public class ClientToolSwap {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onWorldTick(TickEvent.PlayerTickEvent event) {
-        if (toggle.isPressed()) {
-            toggleMode();
+        if (TOGGLE.isPressed()) {
+            ClientToolSwap.toggleMode();
             TranslationTextComponent on_off;
-            if (toggleState) {
+            if (TOGGLE_STATE) {
                 TranslationTextComponent on = new TranslationTextComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_on");
                 on.mergeStyle(Style.EMPTY.setFormatting(TextFormatting.GREEN));
                 on_off = on;
@@ -92,10 +96,10 @@ public class ClientToolSwap {
                 off.mergeStyle(Style.EMPTY.setFormatting(TextFormatting.DARK_RED));
                 on_off = off;
             }
-            TranslationTextComponent statusMessage = new TranslationTextComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification", toggleState);
+            TranslationTextComponent statusMessage = new TranslationTextComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification", TOGGLE_STATE);
             statusMessage.appendString(": ").append(on_off);
             event.player.sendStatusMessage(statusMessage, true);
-            LOGGER.debug("Set tool swap mode to " + toggleState);
+            LOGGER.debug("Set tool swap mode to " + TOGGLE_STATE);
         }
     }
 
@@ -105,11 +109,11 @@ public class ClientToolSwap {
         if (event.getEntity() instanceof PlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntity();
             ItemStack heldItem = player.getHeldItemMainhand();
-            if (toolAboutBreaking(heldItem)) {
-                saveItem(player);
+            if (ClientToolSwap.toolAboutBreaking(heldItem)) {
+                ClientToolSwap.saveItem(player);
             }
-            if (toggleState) {
-                if (cooldown <= 0) {
+            if (TOGGLE_STATE) {
+                if (COOLDOWN <= 0) {
                     List<ToolEntry> tools = new ArrayList<>();
                     BlockState state = event.getState();
                     Block block = state.getBlock();
@@ -121,7 +125,7 @@ public class ClientToolSwap {
 
                         for (int i = 0; i < 9; i++) {
                             ItemStack stack = player.inventory.getStackInSlot(i);
-                            if (toolAboutBreaking(stack)) continue;
+                            if (ClientToolSwap.toolAboutBreaking(stack)) continue;
                             TOOL_TYPES.forEach(type -> {
                                 if (stack.getToolTypes().contains(type)) {
                                     tools.add(new ToolEntry(type, stack));
@@ -176,11 +180,10 @@ public class ClientToolSwap {
                                 break;
                         }
 
-
                         if (finalToolList.isEmpty()) return;
                         ToolType toolType = block.getHarvestTool(state);
-                        if (prevSlot == -1) {
-                            prevSlot = player.inventory.currentItem;
+                        if (PREV_SLOT == -1) {
+                            PREV_SLOT = player.inventory.currentItem;
                         }
 
                         if (toolType == null) {
@@ -204,7 +207,7 @@ public class ClientToolSwap {
                         }
                     }
                 } else {
-                    cooldown--;
+                    COOLDOWN--;
                 }
             }
         }
@@ -214,12 +217,12 @@ public class ClientToolSwap {
     @OnlyIn(Dist.CLIENT)
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         PlayerEntity player = event.player;
-        if (prevSlot != -1 && event.side.isClient() && !Minecraft.getInstance().gameSettings.keyBindAttack.isKeyDown()) {
+        if (PREV_SLOT != -1 && event.side.isClient() && !Minecraft.getInstance().gameSettings.keyBindAttack.isKeyDown()) {
             resetCurrentSlot(player);
         }
     }
 
-    private boolean toolAboutBreaking(ItemStack stack) {
+    private static boolean toolAboutBreaking(ItemStack stack) {
         return ClientConfig.saveBreakingTools.get() && stack.isDamageable() && stack.getDamage() == stack.getMaxDamage() - 1;
     }
 
@@ -234,6 +237,7 @@ public class ClientToolSwap {
         }
 
         if (emptySlot != -1) {
+            //noinspection ConstantConditions
             controller.windowClick(container.windowId, player.inventory.currentItem + 36, 0, ClickType.PICKUP, player);
             controller.windowClick(container.windowId, emptySlot, 0, ClickType.PICKUP, player);
         } else {
@@ -242,24 +246,24 @@ public class ClientToolSwap {
     }
 
     private static void resetCurrentSlot(PlayerEntity player) {
-        if (prevSlot >= 0) {
-            player.inventory.currentItem = prevSlot;
-            prevSlot = -1;
-            cooldown = 5;
+        if (PREV_SLOT >= 0) {
+            player.inventory.currentItem = PREV_SLOT;
+            PREV_SLOT = -1;
+            COOLDOWN = 5;
         }
     }
 
     private static void toggleMode() {
         try {
-            FileInputStream stream = new FileInputStream(config);
+            FileInputStream stream = new FileInputStream(CONFIG_FILE);
             String setting = IOUtils.toString(stream);
-            FileWriter writer = new FileWriter(config);
+            FileWriter writer = new FileWriter(CONFIG_FILE);
             if (setting.equals("1")) {
                 writer.write("0");
-                toggleState = false;
+                TOGGLE_STATE = false;
             } else {
                 writer.write("1");
-                toggleState = true;
+                TOGGLE_STATE = true;
             }
             writer.close();
         } catch (IOException e) {
@@ -267,20 +271,14 @@ public class ClientToolSwap {
         }
     }
 
-    private String getContent() {
+    private static String getContent() {
         try {
-            FileInputStream stream = new FileInputStream(config);
+            FileInputStream stream = new FileInputStream(CONFIG_FILE);
             String setting = IOUtils.toString(stream);
             return setting.trim();
         } catch (IOException e) {
             LOGGER.warn(e);
         }
         return "";
-    }
-
-    private static ITextComponent getWarningComponent() {
-        TranslationTextComponent component = new TranslationTextComponent(ToolSwap.MODID + ".warning");
-        component.mergeStyle(TextFormatting.DARK_RED);
-        return component;
     }
 }
