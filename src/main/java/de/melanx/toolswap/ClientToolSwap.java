@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerController;
 import net.minecraft.client.settings.KeyBinding;
@@ -13,6 +14,7 @@ import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.SwordItem;
 import net.minecraft.item.ToolItem;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
@@ -117,12 +119,15 @@ public class ClientToolSwap {
 
             if (TOGGLE_STATE) {
                 List<ToolEntry> tools = new ArrayList<>();
+                List<ItemStack> swords = new ArrayList<>();
                 BlockState state = event.getState();
                 Block block = state.getBlock();
                 if (!player.isCrouching()) {
-                    if (heldItem.getToolTypes().contains(block.getHarvestTool(state))
-                            && (ClientConfig.ignoreHarvestLevel.get() || heldItem.getItem() instanceof ToolItem
-                            && ((ToolItem) heldItem.getItem()).getTier().getHarvestLevel() == state.getHarvestLevel())) {
+                    if (!state.isIn(Blocks.COBWEB) &&
+                            (heldItem.getToolTypes().contains(block.getHarvestTool(state))
+                                    && (ClientConfig.ignoreHarvestLevel.get()
+                                    || heldItem.getItem() instanceof ToolItem
+                                    && ((ToolItem) heldItem.getItem()).getTier().getHarvestLevel() == state.getHarvestLevel()))) {
                         return;
                     }
 
@@ -134,6 +139,9 @@ public class ClientToolSwap {
                                 tools.add(new ToolEntry(type, stack));
                             }
                         });
+                        if (stack.getItem() instanceof SwordItem) {
+                            swords.add(stack);
+                        }
                     }
                     List<ToolEntry> finalToolList = new ArrayList<>();
                     switch (ClientConfig.sortType.get()) {
@@ -147,6 +155,7 @@ public class ClientToolSwap {
                             break;
                         case RIGHT_TO_LEFT:
                             finalToolList = Lists.reverse(tools);
+                            swords = Lists.reverse(swords);
                             break;
                         case ENCHANTED_FIRST:
                             List<ToolEntry> enchanted = new ArrayList<>();
@@ -181,6 +190,18 @@ public class ClientToolSwap {
                         default: // LEFT_TO_RIGHT
                             finalToolList = tools;
                             break;
+                    }
+
+                    if (state.isIn(Blocks.COBWEB)) {
+                        if (swords.isEmpty()) {
+                            return;
+                        }
+
+                        if (PREV_SLOT == -1) {
+                            PREV_SLOT = player.inventory.currentItem;
+                        }
+                        player.inventory.currentItem = player.inventory.getSlotFor(swords.get(0));
+                        return;
                     }
 
                     if (finalToolList.isEmpty()) return;
