@@ -7,13 +7,12 @@ import java.nio.file.Paths
 
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://maven.minecraftforge.net' }
         maven { url = 'https://plugins.gradle.org/m2/' }
-        jcenter()
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
         classpath group: 'org.apache.maven', name: 'maven-artifact', version: '3.6.3+'
         classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.4.0'
     }
@@ -27,14 +26,17 @@ apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Co
 apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Collection/master/generic/markdown-git-changelog.gradle'
 
 loadSecrets()
-group = "de.melanx.toolswap"
+group = "de.melanx"
 archivesBaseName = "ToolSwap-${mc_version}"
 version = getVersion(group, archivesBaseName, mod_version)
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
+println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings("snapshot", mappings_version)
+    mappings("official", mappings_version)
+
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     createRunConfig("client")
     createRunConfig("server")
@@ -55,7 +57,7 @@ def createRunConfig(String name, Closure extra = {}) {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
+    minecraft 'net.minecraftforge:forge:1.17.1-37.0.0'
 }
 
 jar {

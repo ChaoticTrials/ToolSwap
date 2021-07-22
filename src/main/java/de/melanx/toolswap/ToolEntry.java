@@ -1,22 +1,16 @@
 package de.melanx.toolswap;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ToolItem;
-import net.minecraftforge.common.ToolType;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 
 import javax.annotation.Nullable;
 
-public class ToolEntry {
+public record ToolEntry(Tag<Block> type,
+                        ItemStack stack) {
 
-    public final ToolType type;
-    public final ItemStack stack;
-
-    public ToolEntry(ToolType type, ItemStack stack) {
-        this.type = type;
-        this.stack = stack;
-    }
-
-    public ToolType getType() {
+    public Tag<Block> getType() {
         return this.type;
     }
 
@@ -25,22 +19,22 @@ public class ToolEntry {
     }
 
     @Nullable
-    public ToolItem getToolItem() {
-        return this.stack.getItem() instanceof ToolItem ? (ToolItem) this.stack.getItem() : null;
+    public DiggerItem getToolItem() {
+        return this.stack.getItem() instanceof DiggerItem ? (DiggerItem) this.stack.getItem() : null;
     }
 
     public int getHarvestLevel() {
-        ToolItem item = this.getToolItem();
-        return item != null ? item.getTier().getHarvestLevel() : -1;
+        DiggerItem item = this.getToolItem();
+        return item != null ? item.getTier().getLevel() : -1;
     }
 
     public float getEfficiency() {
-        ToolItem item = this.getToolItem();
-        return item != null ? item.getTier().getEfficiency() : 0.0F;
+        DiggerItem item = this.getToolItem();
+        return item != null ? item.getTier().getLevel() : 0.0F;
     }
 
     @Override
     public String toString() {
-        return this.getType().getName() + ": " + this.stack.toString();
+        return this.getType().toString() + ": " + this.stack.toString();
     }
 }
