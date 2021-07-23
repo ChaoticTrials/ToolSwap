@@ -171,19 +171,19 @@ public class ClientToolSwap {
                             finalToolList.addAll(Lists.reverse(unenchanted));
                         }
                         case ENCHANTED_LAST -> {
-                            List<ToolEntry> enchanted1 = new ArrayList<>();
-                            List<ToolEntry> unenchanted1 = new ArrayList<>();
+                            List<ToolEntry> enchanted = new ArrayList<>();
+                            List<ToolEntry> unenchanted = new ArrayList<>();
                             tools.forEach(toolEntry -> {
                                 if (toolEntry.getStack().isEnchanted()) {
-                                    enchanted1.add(toolEntry);
+                                    enchanted.add(toolEntry);
                                 } else {
-                                    unenchanted1.add(toolEntry);
+                                    unenchanted.add(toolEntry);
                                 }
                             });
-                            unenchanted1.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                            finalToolList.addAll(Lists.reverse(unenchanted1));
-                            enchanted1.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                            finalToolList.addAll(Lists.reverse(enchanted1));
+                            unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                            finalToolList.addAll(Lists.reverse(unenchanted));
+                            enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                            finalToolList.addAll(Lists.reverse(enchanted));
                         }
                         default -> // LEFT_TO_RIGHT
                                 finalToolList = tools;
@@ -202,7 +202,9 @@ public class ClientToolSwap {
                     }
 
                     if (finalToolList.isEmpty()) return;
-                    Optional<ResourceLocation> optionalTag = block.getTags().stream().filter(location -> location.getPath().startsWith("mineable/")).findFirst();
+                    Optional<ResourceLocation> optionalTag = block.getTags().stream()
+                            .filter(location -> location.getPath().startsWith("mineable/"))
+                            .findFirst();
                     if (PREV_SLOT == -1) {
                         PREV_SLOT = player.getInventory().selected;
                     }
