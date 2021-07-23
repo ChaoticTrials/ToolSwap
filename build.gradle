@@ -27,12 +27,13 @@ apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Co
 
 loadSecrets()
 group = "de.melanx"
-archivesBaseName = "ToolSwap-${mc_version}"
-version = getVersion(group, archivesBaseName, mod_version)
+archivesBaseName = "ToolSwap"
+version = getVersion(group, archivesBaseName, "${mc_version}-${mod_version}")
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+println('Mod: ' + archivesBaseName + ' Group: ' + group + ' Version: ' + version)
 minecraft {
     mappings("official", mappings_version)
 
