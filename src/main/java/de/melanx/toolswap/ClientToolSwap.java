@@ -24,7 +24,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.TierSortingRegistry;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -42,6 +44,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -85,7 +88,7 @@ public class ClientToolSwap {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void onWorldTick(TickEvent.ClientTickEvent event) {
+    public void onWorldTick(InputEvent.KeyInputEvent event) {
         if (TOGGLE.isDown()) {
             ClientToolSwap.toggleMode();
             TranslatableComponent on_off;
@@ -125,7 +128,7 @@ public class ClientToolSwap {
                     if (!state.is(Blocks.COBWEB) &&
                             (ClientConfig.ignoreHarvestLevel.get()
                                     || heldItem.getItem() instanceof DiggerItem
-                                    && ((DiggerItem) heldItem.getItem()).getTier().getLevel() == state.getHarvestLevel())) {
+                                    && !TierSortingRegistry.isCorrectTierForDrops(((DiggerItem) heldItem.getItem()).getTier(), state))) {
                         return;
                     }
 
@@ -222,7 +225,8 @@ public class ClientToolSwap {
 
                     if (optionalTag.isPresent()) {
                         for (ToolEntry entry : finalToolList) {
-                            if (Objects.equals(BlockTags.getAllTags().getId(entry.getType()), optionalTag.get()) && state.getHarvestLevel() <= entry.getHarvestLevel()) {
+                            //noinspection ConstantConditions
+                            if (Objects.equals(BlockTags.getAllTags().getId(entry.getType()), optionalTag.get()) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
                                 player.getInventory().selected = player.getInventory().findSlotMatchingItem(entry.getStack());
                                 return;
                             }
@@ -286,13 +290,13 @@ public class ClientToolSwap {
     }
 
     private static ItemStack findEqualTool(Inventory inventory, ItemStack stack) {
-        if (stack.getItem().getToolTypes(stack).isEmpty()) {
+        if (!(stack.getItem() instanceof DiggerItem item) || item.blocks.getValues().isEmpty()) {
             return stack;
         }
 
-        for (ItemStack item : inventory.items) {
-            if (item.sameItemStackIgnoreDurability(stack) && !ClientToolSwap.toolAboutBreaking(item)) {
-                return item;
+        for (ItemStack tool : inventory.items) {
+            if (tool.sameItemStackIgnoreDurability(stack) && !ClientToolSwap.toolAboutBreaking(tool)) {
+                return tool;
             }
         }
 
@@ -309,7 +313,7 @@ public class ClientToolSwap {
     private static void toggleMode() {
         try {
             FileInputStream stream = new FileInputStream(CONFIG_FILE);
-            String setting = IOUtils.toString(stream);
+            String setting = IOUtils.toString(stream, Charset.defaultCharset());
             FileWriter writer = new FileWriter(CONFIG_FILE);
             if (setting.equals("1")) {
                 writer.write("0");

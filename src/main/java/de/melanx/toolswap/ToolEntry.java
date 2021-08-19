@@ -20,7 +20,7 @@ public record ToolEntry(Tag<Block> type,
 
     @Nullable
     public DiggerItem getToolItem() {
-        return this.stack.getItem() instanceof DiggerItem ? (DiggerItem) this.stack.getItem() : null;
+        return this.stack.getItem() instanceof DiggerItem item ? item : null;
     }
 
     public int getHarvestLevel() {
