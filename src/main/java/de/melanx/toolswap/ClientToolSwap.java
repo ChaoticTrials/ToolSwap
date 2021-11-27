@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientToolSwap {
@@ -112,6 +113,11 @@ public class ClientToolSwap {
     public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
         if (event.getEntity() instanceof PlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntity();
+            //noinspection ConstantConditions
+            if (!Objects.equals(player.getGameProfile().getId(), Minecraft.getInstance().player.getGameProfile().getId())) {
+                return;
+            }
+
             ItemStack heldItem = player.getHeldItemMainhand();
             if (ClientToolSwap.toolAboutBreaking(heldItem)) {
                 ClientToolSwap.saveItem(player);
