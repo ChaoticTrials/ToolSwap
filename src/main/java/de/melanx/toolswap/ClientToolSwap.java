@@ -114,6 +114,11 @@ public class ClientToolSwap {
     @OnlyIn(Dist.CLIENT)
     public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
         if (event.getEntity() instanceof Player player) {
+            //noinspection ConstantConditions
+            if (!Objects.equals(player.getGameProfile().getId(), Minecraft.getInstance().player.getGameProfile().getId())) {
+                return;
+            }
+
             ItemStack heldItem = player.getMainHandItem();
             if (ClientToolSwap.toolAboutBreaking(heldItem)) {
                 ClientToolSwap.saveItem(player);
@@ -158,6 +163,9 @@ public class ClientToolSwap {
                             finalToolList = Lists.reverse(tools);
                             swords = Lists.reverse(swords);
                         }
+                        case LEFT_TO_RIGHT -> {
+                            finalToolList = tools;
+                        }
                         case ENCHANTED_FIRST -> {
                             List<ToolEntry> enchanted = new ArrayList<>();
                             List<ToolEntry> unenchanted = new ArrayList<>();
@@ -188,8 +196,6 @@ public class ClientToolSwap {
                             enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
                             finalToolList.addAll(Lists.reverse(enchanted));
                         }
-                        default -> // LEFT_TO_RIGHT
-                                finalToolList = tools;
                     }
 
                     if (state.is(Blocks.COBWEB)) {

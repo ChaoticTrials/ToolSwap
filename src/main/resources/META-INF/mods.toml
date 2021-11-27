@@ -6,6 +6,7 @@ license = "Apache 2.0"
 modId="toolswap"
 version="${file.jarVersion}"
 displayName="ToolSwap"
+updateJSONURL="https://assets.melanx.de/updates/automatic-tool-swap.json"
 logoFile="logo.png"
 authors="MelanX"
 description='''
