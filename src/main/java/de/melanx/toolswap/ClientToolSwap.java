@@ -88,26 +88,38 @@ public class ClientToolSwap {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void onWorldTick(InputEvent.KeyInputEvent event) {
-        if (TOGGLE.isDown()) {
-            ClientToolSwap.toggleMode();
-            TranslatableComponent on_off;
-            if (TOGGLE_STATE) {
-                TranslatableComponent on = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_on");
-                on.withStyle(Style.EMPTY.applyFormat(ChatFormatting.GREEN));
-                on_off = on;
-            } else {
-                TranslatableComponent off = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_off");
-                off.withStyle(Style.EMPTY.applyFormat(ChatFormatting.DARK_RED));
-                on_off = off;
-            }
-            TranslatableComponent statusMessage = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification", TOGGLE_STATE);
-            statusMessage.append(": ").append(on_off);
-            if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(statusMessage, true);
-            }
-            LOGGER.debug("Set tool swap mode to " + TOGGLE_STATE);
+    public void keyInput(InputEvent.KeyInputEvent event) {
+        if (event.getKey() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS) {
+            ClientToolSwap.handleInput();
         }
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void mouseInput(InputEvent.MouseInputEvent event) {
+        if (event.getButton() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS) {
+            ClientToolSwap.handleInput();
+        }
+    }
+
+    private static void handleInput() {
+        ClientToolSwap.toggleMode();
+        TranslatableComponent on_off;
+        if (TOGGLE_STATE) {
+            TranslatableComponent on = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_on");
+            on.withStyle(Style.EMPTY.applyFormat(ChatFormatting.GREEN));
+            on_off = on;
+        } else {
+            TranslatableComponent off = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_off");
+            off.withStyle(Style.EMPTY.applyFormat(ChatFormatting.DARK_RED));
+            on_off = off;
+        }
+        TranslatableComponent statusMessage = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification", TOGGLE_STATE);
+        statusMessage.append(": ").append(on_off);
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance().player.displayClientMessage(statusMessage, true);
+        }
+        LOGGER.debug("Set tool swap mode to " + TOGGLE_STATE);
     }
 
     @SubscribeEvent
