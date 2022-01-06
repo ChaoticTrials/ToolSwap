@@ -27,6 +27,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.TierSortingRegistry;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -45,7 +46,10 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientToolSwap {
@@ -137,8 +141,9 @@ public class ClientToolSwap {
             }
 
             if (TOGGLE_STATE) {
-                List<ToolEntry> tools = new ArrayList<>();
-                List<ItemStack> swords = new ArrayList<>();
+                List<ToolEntry> tools = Lists.newArrayList();
+                List<ItemStack> swords = Lists.newArrayList();
+                List<ItemStack> shears = Lists.newArrayList();
                 BlockState state = event.getState();
                 Block block = state.getBlock();
                 if (!player.isCrouching()) {
@@ -160,8 +165,11 @@ public class ClientToolSwap {
                         if (stack.getItem() instanceof SwordItem) {
                             swords.add(stack);
                         }
+                        if (Tags.Items.SHEARS.contains(stack.getItem())) {
+                            shears.add(stack);
+                        }
                     }
-                    List<ToolEntry> finalToolList = new ArrayList<>();
+                    List<ToolEntry> finalToolList = Lists.newArrayList();
                     switch (ClientConfig.sortType.get()) {
                         case LEVEL -> {
                             tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
@@ -174,13 +182,14 @@ public class ClientToolSwap {
                         case RIGHT_TO_LEFT -> {
                             finalToolList = Lists.reverse(tools);
                             swords = Lists.reverse(swords);
+                            shears = Lists.reverse(shears);
                         }
                         case LEFT_TO_RIGHT -> {
                             finalToolList = tools;
                         }
                         case ENCHANTED_FIRST -> {
-                            List<ToolEntry> enchanted = new ArrayList<>();
-                            List<ToolEntry> unenchanted = new ArrayList<>();
+                            List<ToolEntry> enchanted = Lists.newArrayList();
+                            List<ToolEntry> unenchanted = Lists.newArrayList();
                             tools.forEach(toolEntry -> {
                                 if (toolEntry.getStack().isEnchanted()) {
                                     enchanted.add(toolEntry);
@@ -194,8 +203,8 @@ public class ClientToolSwap {
                             finalToolList.addAll(Lists.reverse(unenchanted));
                         }
                         case ENCHANTED_LAST -> {
-                            List<ToolEntry> enchanted = new ArrayList<>();
-                            List<ToolEntry> unenchanted = new ArrayList<>();
+                            List<ToolEntry> enchanted = Lists.newArrayList();
+                            List<ToolEntry> unenchanted = Lists.newArrayList();
                             tools.forEach(toolEntry -> {
                                 if (toolEntry.getStack().isEnchanted()) {
                                     enchanted.add(toolEntry);
@@ -219,6 +228,18 @@ public class ClientToolSwap {
                             PREV_SLOT = player.getInventory().selected;
                         }
                         player.getInventory().selected = player.getInventory().findSlotMatchingItem(swords.get(0));
+                        return;
+                    }
+
+                    if (state.is(BlockTags.WOOL)) {
+                        if (shears.isEmpty()) {
+                            return;
+                        }
+
+                        if (PREV_SLOT == -1) {
+                            PREV_SLOT = player.getInventory().selected;
+                        }
+                        player.getInventory().selected = player.getInventory().findSlotMatchingItem(shears.get(0));
                         return;
                     }
 
