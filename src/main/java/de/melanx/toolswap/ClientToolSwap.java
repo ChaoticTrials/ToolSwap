@@ -49,7 +49,8 @@ import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientToolSwap {
@@ -244,30 +245,35 @@ public class ClientToolSwap {
                     }
 
                     if (finalToolList.isEmpty()) return;
-                    Optional<ResourceLocation> optionalTag = block.getTags().stream()
+                    Set<ResourceLocation> mineables = block.getTags().stream()
                             .filter(location -> location.getPath().startsWith("mineable/"))
-                            .findFirst();
+                            .collect(Collectors.toSet());
                     if (PREV_SLOT == -1) {
                         PREV_SLOT = player.getInventory().selected;
                     }
 
-                    if (optionalTag.isEmpty()) {
+                    if (mineables.isEmpty()) {
                         float blockHardness = state.getDestroySpeed(player.level, event.getPos());
                         if (blockHardness > 0) {
                             for (ToolEntry entry : finalToolList) {
                                 if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {
-                                    optionalTag = Optional.ofNullable(BlockTags.getAllTags().getId(entry.getType()));
+                                    ResourceLocation id = BlockTags.getAllTags().getId(entry.getType());
+                                    if (id != null) {
+                                        mineables.add(id);
+                                    }
                                 }
                             }
                         }
                     }
 
-                    if (optionalTag.isPresent()) {
+                    if (!mineables.isEmpty()) {
                         for (ToolEntry entry : finalToolList) {
-                            //noinspection ConstantConditions
-                            if (Objects.equals(BlockTags.getAllTags().getId(entry.getType()), optionalTag.get()) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
-                                player.getInventory().selected = player.getInventory().findSlotMatchingItem(entry.getStack());
-                                return;
+                            for (ResourceLocation id : mineables) {
+                                //noinspection ConstantConditions
+                                if (Objects.equals(BlockTags.getAllTags().getId(entry.getType()), id) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
+                                    player.getInventory().selected = player.getInventory().findSlotMatchingItem(entry.getStack());
+                                    return;
+                                }
                             }
                         }
                     }
