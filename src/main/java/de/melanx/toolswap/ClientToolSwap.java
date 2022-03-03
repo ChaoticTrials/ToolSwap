@@ -6,11 +6,13 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ToggleKeyMapping;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -57,7 +59,7 @@ public class ClientToolSwap {
 
     public static final Logger LOGGER = LogManager.getLogger(ClientToolSwap.class);
     public static final ToggleKeyMapping TOGGLE = new ToggleKeyMapping(ToolSwap.MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, "Automatic Tool Swap", () -> false);
-    private static final ImmutableList<Tag<Block>> TOOL_TYPES = ImmutableList.of(BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.MINEABLE_WITH_AXE, BlockTags.MINEABLE_WITH_SHOVEL, BlockTags.MINEABLE_WITH_HOE);
+    private static final ImmutableList<TagKey<Block>> TOOL_TYPES = ImmutableList.of(BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.MINEABLE_WITH_AXE, BlockTags.MINEABLE_WITH_SHOVEL, BlockTags.MINEABLE_WITH_HOE);
     private static final File CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("." + ToolSwap.MODID).toFile();
     private static int PREV_SLOT = -1;
     private static boolean TOGGLE_STATE = false;
@@ -159,14 +161,14 @@ public class ClientToolSwap {
                         ItemStack stack = player.getInventory().getItem(i);
                         if (ClientToolSwap.toolAboutBreaking(stack)) continue;
                         TOOL_TYPES.forEach(type -> {
-                            if (stack.getItem() instanceof DiggerItem && BlockTags.getAllTags().getId(type) == BlockTags.getAllTags().getId(((DiggerItem) stack.getItem()).blocks)) {
+                            if (stack.getItem() instanceof DiggerItem && type.location() == ((DiggerItem) stack.getItem()).blocks.location()) {
                                 tools.add(new ToolEntry(type, stack));
                             }
                         });
                         if (stack.getItem() instanceof SwordItem) {
                             swords.add(stack);
                         }
-                        if (Tags.Items.SHEARS.contains(stack.getItem())) {
+                        if (stack.is(Tags.Items.SHEARS)) {
                             shears.add(stack);
                         }
                     }
@@ -245,7 +247,8 @@ public class ClientToolSwap {
                     }
 
                     if (finalToolList.isEmpty()) return;
-                    Set<ResourceLocation> mineables = block.getTags().stream()
+                    Set<ResourceLocation> mineables = Registry.BLOCK.getHolderOrThrow(block.builtInRegistryHolder().key()).tags()
+                            .map(TagKey::location)
                             .filter(location -> location.getPath().startsWith("mineable/"))
                             .collect(Collectors.toSet());
                     if (PREV_SLOT == -1) {
@@ -257,10 +260,8 @@ public class ClientToolSwap {
                         if (blockHardness > 0) {
                             for (ToolEntry entry : finalToolList) {
                                 if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {
-                                    ResourceLocation id = BlockTags.getAllTags().getId(entry.getType());
-                                    if (id != null) {
-                                        mineables.add(id);
-                                    }
+                                    ResourceLocation id = entry.getType().location();
+                                    mineables.add(id);
                                 }
                             }
                         }
@@ -270,7 +271,7 @@ public class ClientToolSwap {
                         for (ToolEntry entry : finalToolList) {
                             for (ResourceLocation id : mineables) {
                                 //noinspection ConstantConditions
-                                if (Objects.equals(BlockTags.getAllTags().getId(entry.getType()), id) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
+                                if (Objects.equals(entry.getType().location(), id) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
                                     player.getInventory().selected = player.getInventory().findSlotMatchingItem(entry.getStack());
                                     return;
                                 }
@@ -335,13 +336,16 @@ public class ClientToolSwap {
     }
 
     private static ItemStack findEqualTool(Inventory inventory, ItemStack stack) {
-        if (!(stack.getItem() instanceof DiggerItem item) || item.blocks.getValues().isEmpty()) {
-            return stack;
-        }
+        if ((stack.getItem() instanceof DiggerItem item)) {
+            Iterable<Holder<Block>> tagOrEmpty = Registry.BLOCK.getTagOrEmpty(item.blocks);
+            if (!tagOrEmpty.iterator().hasNext()) {
+                return stack;
+            }
 
-        for (ItemStack tool : inventory.items) {
-            if (tool.sameItemStackIgnoreDurability(stack) && !ClientToolSwap.toolAboutBreaking(tool)) {
-                return tool;
+            for (ItemStack tool : inventory.items) {
+                if (tool.sameItemStackIgnoreDurability(stack) && !ClientToolSwap.toolAboutBreaking(tool)) {
+                    return tool;
+                }
             }
         }
 
@@ -381,6 +385,7 @@ public class ClientToolSwap {
         } catch (IOException e) {
             LOGGER.warn(e);
         }
+
         return "";
     }
 }

@@ -1,16 +1,16 @@
 package de.melanx.toolswap;
 
-import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 import javax.annotation.Nullable;
 
-public record ToolEntry(Tag<Block> type,
+public record ToolEntry(TagKey<Block> type,
                         ItemStack stack) {
 
-    public Tag<Block> getType() {
+    public TagKey<Block> getType() {
         return this.type;
     }
 
