@@ -6,6 +6,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ToggleKeyMapping;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Style;
@@ -48,6 +49,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -132,7 +134,7 @@ public class ClientToolSwap {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
-        if (event.getEntity() instanceof Player player) {
+        if (event.getEntity() instanceof LocalPlayer player) {
             //noinspection ConstantConditions
             if (!Objects.equals(player.getGameProfile().getId(), Minecraft.getInstance().player.getGameProfile().getId())) {
                 return;
@@ -187,9 +189,8 @@ public class ClientToolSwap {
                             swords = Lists.reverse(swords);
                             shears = Lists.reverse(shears);
                         }
-                        case LEFT_TO_RIGHT -> {
-                            finalToolList = tools;
-                        }
+                        case LEFT_TO_RIGHT -> finalToolList = tools;
+                        //noinspection DuplicatedCode
                         case ENCHANTED_FIRST -> {
                             List<ToolEntry> enchanted = Lists.newArrayList();
                             List<ToolEntry> unenchanted = Lists.newArrayList();
@@ -205,6 +206,7 @@ public class ClientToolSwap {
                             unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
                             finalToolList.addAll(Lists.reverse(unenchanted));
                         }
+                        //noinspection DuplicatedCode
                         case ENCHANTED_LAST -> {
                             List<ToolEntry> enchanted = Lists.newArrayList();
                             List<ToolEntry> unenchanted = Lists.newArrayList();
@@ -230,7 +232,7 @@ public class ClientToolSwap {
                         if (PREV_SLOT == -1) {
                             PREV_SLOT = player.getInventory().selected;
                         }
-                        player.getInventory().selected = player.getInventory().findSlotMatchingItem(swords.get(0));
+                        this.switchTo(player, swords.get(0));
                         return;
                     }
 
@@ -242,11 +244,12 @@ public class ClientToolSwap {
                         if (PREV_SLOT == -1) {
                             PREV_SLOT = player.getInventory().selected;
                         }
-                        player.getInventory().selected = player.getInventory().findSlotMatchingItem(shears.get(0));
+                        this.switchTo(player, shears.get(0));
                         return;
                     }
 
                     if (finalToolList.isEmpty()) return;
+                    //noinspection deprecation
                     Set<ResourceLocation> mineables = Registry.BLOCK.getHolderOrThrow(block.builtInRegistryHolder().key()).tags()
                             .map(TagKey::location)
                             .filter(location -> location.getPath().startsWith("mineable/"))
@@ -272,7 +275,7 @@ public class ClientToolSwap {
                             for (ResourceLocation id : mineables) {
                                 //noinspection ConstantConditions
                                 if (Objects.equals(entry.getType().location(), id) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
-                                    player.getInventory().selected = player.getInventory().findSlotMatchingItem(entry.getStack());
+                                    this.switchTo(player, entry.getStack());
                                     return;
                                 }
                             }
@@ -283,7 +286,7 @@ public class ClientToolSwap {
                         for (int i = 0; i < 9; i++) {
                             ItemStack stack = player.getInventory().getItem(i);
                             if (!stack.getItem().canBeDepleted()) {
-                                player.getInventory().selected = i;
+                                this.switchTo(player, i);
                                 return;
                             }
                         }
@@ -293,12 +296,23 @@ public class ClientToolSwap {
         }
     }
 
+    private void switchTo(LocalPlayer player, ItemStack stack) {
+        this.switchTo(player, player.getInventory().findSlotMatchingItem(stack));
+    }
+
+    private void switchTo(LocalPlayer player, int slotId) {
+        if (player.getInventory().selected == slotId) {
+            return;
+        }
+
+        player.getInventory().selected = slotId;
+    }
+
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        Player player = event.player;
-        if (PREV_SLOT != -1 && event.side.isClient() && !Minecraft.getInstance().options.keyAttack.isDown()) {
-            resetCurrentSlot(player);
+        if (event.player instanceof LocalPlayer player && PREV_SLOT != -1 && event.side.isClient() && !Minecraft.getInstance().options.keyAttack.isDown()) {
+            this.resetCurrentSlot(player);
         }
     }
 
@@ -337,6 +351,7 @@ public class ClientToolSwap {
 
     private static ItemStack findEqualTool(Inventory inventory, ItemStack stack) {
         if ((stack.getItem() instanceof DiggerItem item)) {
+            //noinspection deprecation
             Iterable<Holder<Block>> tagOrEmpty = Registry.BLOCK.getTagOrEmpty(item.blocks);
             if (!tagOrEmpty.iterator().hasNext()) {
                 return stack;
@@ -352,9 +367,9 @@ public class ClientToolSwap {
         return stack;
     }
 
-    private static void resetCurrentSlot(Player player) {
+    private void resetCurrentSlot(LocalPlayer player) {
         if (PREV_SLOT >= 0) {
-            player.getInventory().selected = PREV_SLOT;
+            this.switchTo(player, PREV_SLOT);
             PREV_SLOT = -1;
         }
     }
@@ -380,7 +395,7 @@ public class ClientToolSwap {
     private static String getContent() {
         try {
             FileInputStream stream = new FileInputStream(CONFIG_FILE);
-            String setting = IOUtils.toString(stream);
+            String setting = IOUtils.toString(stream, StandardCharsets.UTF_8);
             return setting.trim();
         } catch (IOException e) {
             LOGGER.warn(e);
