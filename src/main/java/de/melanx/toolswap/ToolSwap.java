@@ -20,11 +20,6 @@ public class ToolSwap {
     public ToolSwap() {
         if (FMLEnvironment.dist == Dist.CLIENT) {
             new ClientToolSwap();
-        } else {
-            LOGGER.warn("###################################################");
-            LOGGER.warn("#      AutomaticToolSwap was loaded on server     #");
-            LOGGER.warn("#  Consider removing it to save some of your RAM  #");
-            LOGGER.warn("###################################################");
         }
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
     }

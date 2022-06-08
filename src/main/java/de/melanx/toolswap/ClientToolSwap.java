@@ -9,8 +9,9 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -65,10 +66,10 @@ public class ClientToolSwap {
     private static final File CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("." + ToolSwap.MODID).toFile();
     private static int PREV_SLOT = -1;
     private static boolean TOGGLE_STATE = false;
-    public static TranslatableComponent WARNING;
+    public static MutableComponent WARNING;
 
     static {
-        WARNING = new TranslatableComponent(ToolSwap.MODID + ".warning");
+        WARNING = Component.translatable(ToolSwap.MODID + ".warning");
         WARNING.withStyle(ChatFormatting.DARK_RED);
     }
 
@@ -113,17 +114,17 @@ public class ClientToolSwap {
 
     private static void handleInput() {
         ClientToolSwap.toggleMode();
-        TranslatableComponent on_off;
+        MutableComponent on_off;
         if (TOGGLE_STATE) {
-            TranslatableComponent on = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_on");
+            MutableComponent on = Component.translatable(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_on");
             on.withStyle(Style.EMPTY.applyFormat(ChatFormatting.GREEN));
             on_off = on;
         } else {
-            TranslatableComponent off = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_off");
+            MutableComponent off = Component.translatable(ToolSwap.MODID + ".key.toggle_toolswap_notification.state_off");
             off.withStyle(Style.EMPTY.applyFormat(ChatFormatting.DARK_RED));
             on_off = off;
         }
-        TranslatableComponent statusMessage = new TranslatableComponent(ToolSwap.MODID + ".key.toggle_toolswap_notification", TOGGLE_STATE);
+        MutableComponent statusMessage = Component.translatable(ToolSwap.MODID + ".key.toggle_toolswap_notification", TOGGLE_STATE);
         statusMessage.append(": ").append(on_off);
         if (Minecraft.getInstance().player != null) {
             Minecraft.getInstance().player.displayClientMessage(statusMessage, true);
