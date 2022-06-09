@@ -8,6 +8,7 @@ version="${file.jarVersion}"
 displayName="ToolSwap"
 updateJSONURL="https://assets.melanx.de/updates/automatic-tool-swap.json"
 authors="MelanX"
+displayTest="IGNORE_ALL_VERSION"
 description='''
 Swaps the tools to the effective one if it's in hotbar.
 '''
@@ -15,7 +16,7 @@ Swaps the tools to the effective one if it's in hotbar.
 [[dependencies.toolswap]]
     modId="forge"
     mandatory=true
-    versionRange="[41,)"
+    versionRange="[41.0.15,)"
     ordering="NONE"
     side="BOTH"
 
