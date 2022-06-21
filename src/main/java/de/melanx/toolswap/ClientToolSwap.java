@@ -5,8 +5,10 @@ import com.google.common.collect.Lists;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ToggleKeyMapping;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
@@ -34,7 +36,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.TierSortingRegistry;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -112,6 +113,14 @@ public class ClientToolSwap {
         }
     }
 
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.player instanceof LocalPlayer player && PREV_SLOT != -1 && event.side.isClient() && !Minecraft.getInstance().options.keyAttack.isDown()) {
+            this.resetCurrentSlot(player);
+        }
+    }
+
     private static void handleInput() {
         ClientToolSwap.toggleMode();
         MutableComponent on_off;
@@ -132,164 +141,166 @@ public class ClientToolSwap {
         LOGGER.debug("Set tool swap mode to " + TOGGLE_STATE);
     }
 
-    @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
-    public void onBlockDestroy(PlayerEvent.BreakSpeed event) {
-        if (event.getEntity() instanceof LocalPlayer player) {
-            //noinspection ConstantConditions
-            if (!Objects.equals(player.getGameProfile().getId(), Minecraft.getInstance().player.getGameProfile().getId())) {
-                return;
-            }
+    public static void searchForSwitching(MultiPlayerGameMode multiPlayerGameMode, BlockPos pos) {
+        ClientLevel level = multiPlayerGameMode.minecraft.level;
+        LocalPlayer player = multiPlayerGameMode.minecraft.player;
+        if (level == null || player == null) {
+            return;
+        }
 
-            ItemStack heldItem = player.getMainHandItem();
-            if (ClientToolSwap.toolAboutBreaking(heldItem)) {
-                ClientToolSwap.saveItem(player);
-            }
+        //noinspection ConstantConditions
+        if (!Objects.equals(player.getGameProfile().getId(), Minecraft.getInstance().player.getGameProfile().getId())) {
+            return;
+        }
 
-            if (TOGGLE_STATE) {
-                List<ToolEntry> tools = Lists.newArrayList();
-                List<ItemStack> swords = Lists.newArrayList();
-                List<ItemStack> shears = Lists.newArrayList();
-                BlockState state = event.getState();
-                Block block = state.getBlock();
-                if (!player.isCrouching()) {
-                    if (!state.is(Blocks.COBWEB) &&
-                            (ClientConfig.ignoreHarvestLevel.get()
-                                    || heldItem.getItem() instanceof DiggerItem
-                                    && !TierSortingRegistry.isCorrectTierForDrops(((DiggerItem) heldItem.getItem()).getTier(), state))) {
-                        return;
+        ItemStack heldItem = player.getMainHandItem();
+        if (ClientToolSwap.toolAboutBreaking(heldItem)) {
+            ClientToolSwap.saveItem(player);
+        }
+
+        if (TOGGLE_STATE) {
+            List<ToolEntry> tools = Lists.newArrayList();
+            List<ItemStack> swords = Lists.newArrayList();
+            List<ItemStack> shears = Lists.newArrayList();
+            BlockState state = level.getBlockState(pos);
+            Block block = state.getBlock();
+            if (!player.isCrouching()) {
+                if (!state.is(Blocks.COBWEB) &&
+                        (ClientConfig.ignoreHarvestLevel.get()
+                                || heldItem.getItem() instanceof DiggerItem
+                                && !TierSortingRegistry.isCorrectTierForDrops(((DiggerItem) heldItem.getItem()).getTier(), state))) {
+                    return;
+                }
+
+                for (int i = 0; i < 9; i++) {
+                    ItemStack stack = player.getInventory().getItem(i);
+                    if (ClientToolSwap.toolAboutBreaking(stack)) continue;
+                    TOOL_TYPES.forEach(type -> {
+                        if (stack.getItem() instanceof DiggerItem && type.location() == ((DiggerItem) stack.getItem()).blocks.location()) {
+                            tools.add(new ToolEntry(type, stack));
+                        }
+                    });
+                    if (stack.getItem() instanceof SwordItem) {
+                        swords.add(stack);
                     }
-
-                    for (int i = 0; i < 9; i++) {
-                        ItemStack stack = player.getInventory().getItem(i);
-                        if (ClientToolSwap.toolAboutBreaking(stack)) continue;
-                        TOOL_TYPES.forEach(type -> {
-                            if (stack.getItem() instanceof DiggerItem && type.location() == ((DiggerItem) stack.getItem()).blocks.location()) {
-                                tools.add(new ToolEntry(type, stack));
+                    if (stack.is(Tags.Items.SHEARS)) {
+                        shears.add(stack);
+                    }
+                }
+                List<ToolEntry> finalToolList = Lists.newArrayList();
+                switch (ClientConfig.sortType.get()) {
+                    case LEVEL -> {
+                        tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                        finalToolList = tools;
+                    }
+                    case LEVEL_INVERTED -> {
+                        tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                        finalToolList = Lists.reverse(tools);
+                    }
+                    case RIGHT_TO_LEFT -> {
+                        finalToolList = Lists.reverse(tools);
+                        swords = Lists.reverse(swords);
+                        shears = Lists.reverse(shears);
+                    }
+                    case LEFT_TO_RIGHT -> finalToolList = tools;
+                    //noinspection DuplicatedCode
+                    case ENCHANTED_FIRST -> {
+                        List<ToolEntry> enchanted = Lists.newArrayList();
+                        List<ToolEntry> unenchanted = Lists.newArrayList();
+                        tools.forEach(toolEntry -> {
+                            if (toolEntry.getStack().isEnchanted()) {
+                                enchanted.add(toolEntry);
+                            } else {
+                                unenchanted.add(toolEntry);
                             }
                         });
-                        if (stack.getItem() instanceof SwordItem) {
-                            swords.add(stack);
-                        }
-                        if (stack.is(Tags.Items.SHEARS)) {
-                            shears.add(stack);
-                        }
+                        enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                        finalToolList.addAll(Lists.reverse(enchanted));
+                        unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                        finalToolList.addAll(Lists.reverse(unenchanted));
                     }
-                    List<ToolEntry> finalToolList = Lists.newArrayList();
-                    switch (ClientConfig.sortType.get()) {
-                        case LEVEL -> {
-                            tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                            finalToolList = tools;
-                        }
-                        case LEVEL_INVERTED -> {
-                            tools.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                            finalToolList = Lists.reverse(tools);
-                        }
-                        case RIGHT_TO_LEFT -> {
-                            finalToolList = Lists.reverse(tools);
-                            swords = Lists.reverse(swords);
-                            shears = Lists.reverse(shears);
-                        }
-                        case LEFT_TO_RIGHT -> finalToolList = tools;
-                        //noinspection DuplicatedCode
-                        case ENCHANTED_FIRST -> {
-                            List<ToolEntry> enchanted = Lists.newArrayList();
-                            List<ToolEntry> unenchanted = Lists.newArrayList();
-                            tools.forEach(toolEntry -> {
-                                if (toolEntry.getStack().isEnchanted()) {
-                                    enchanted.add(toolEntry);
-                                } else {
-                                    unenchanted.add(toolEntry);
-                                }
-                            });
-                            enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                            finalToolList.addAll(Lists.reverse(enchanted));
-                            unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                            finalToolList.addAll(Lists.reverse(unenchanted));
-                        }
-                        //noinspection DuplicatedCode
-                        case ENCHANTED_LAST -> {
-                            List<ToolEntry> enchanted = Lists.newArrayList();
-                            List<ToolEntry> unenchanted = Lists.newArrayList();
-                            tools.forEach(toolEntry -> {
-                                if (toolEntry.getStack().isEnchanted()) {
-                                    enchanted.add(toolEntry);
-                                } else {
-                                    unenchanted.add(toolEntry);
-                                }
-                            });
-                            unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                            finalToolList.addAll(Lists.reverse(unenchanted));
-                            enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
-                            finalToolList.addAll(Lists.reverse(enchanted));
-                        }
+                    //noinspection DuplicatedCode
+                    case ENCHANTED_LAST -> {
+                        List<ToolEntry> enchanted = Lists.newArrayList();
+                        List<ToolEntry> unenchanted = Lists.newArrayList();
+                        tools.forEach(toolEntry -> {
+                            if (toolEntry.getStack().isEnchanted()) {
+                                enchanted.add(toolEntry);
+                            } else {
+                                unenchanted.add(toolEntry);
+                            }
+                        });
+                        unenchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                        finalToolList.addAll(Lists.reverse(unenchanted));
+                        enchanted.sort(Comparator.comparingInt(ToolEntry::getHarvestLevel));
+                        finalToolList.addAll(Lists.reverse(enchanted));
                     }
+                }
 
-                    if (state.is(Blocks.COBWEB)) {
-                        if (swords.isEmpty()) {
-                            return;
-                        }
-
-                        if (PREV_SLOT == -1) {
-                            PREV_SLOT = player.getInventory().selected;
-                        }
-                        this.switchTo(player, swords.get(0));
+                if (state.is(Blocks.COBWEB)) {
+                    if (swords.isEmpty()) {
                         return;
                     }
 
-                    if (state.is(BlockTags.WOOL)) {
-                        if (shears.isEmpty()) {
-                            return;
-                        }
-
-                        if (PREV_SLOT == -1) {
-                            PREV_SLOT = player.getInventory().selected;
-                        }
-                        this.switchTo(player, shears.get(0));
-                        return;
-                    }
-
-                    if (finalToolList.isEmpty()) return;
-                    //noinspection deprecation
-                    Set<ResourceLocation> mineables = Registry.BLOCK.getHolderOrThrow(block.builtInRegistryHolder().key()).tags()
-                            .map(TagKey::location)
-                            .filter(location -> location.getPath().startsWith("mineable/"))
-                            .collect(Collectors.toSet());
                     if (PREV_SLOT == -1) {
                         PREV_SLOT = player.getInventory().selected;
                     }
+                    ClientToolSwap.switchTo(player, swords.get(0));
+                    return;
+                }
 
-                    if (mineables.isEmpty()) {
-                        float blockHardness = state.getDestroySpeed(player.level, event.getPos());
-                        if (blockHardness > 0) {
-                            for (ToolEntry entry : finalToolList) {
-                                if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {
-                                    ResourceLocation id = entry.getType().location();
-                                    mineables.add(id);
-                                }
-                            }
-                        }
+                if (state.is(BlockTags.WOOL)) {
+                    if (shears.isEmpty()) {
+                        return;
                     }
 
-                    if (!mineables.isEmpty()) {
+                    if (PREV_SLOT == -1) {
+                        PREV_SLOT = player.getInventory().selected;
+                    }
+                    ClientToolSwap.switchTo(player, shears.get(0));
+                    return;
+                }
+
+                if (finalToolList.isEmpty()) return;
+                //noinspection deprecation
+                Set<ResourceLocation> mineables = Registry.BLOCK.getHolderOrThrow(block.builtInRegistryHolder().key()).tags()
+                        .map(TagKey::location)
+                        .filter(location -> location.getPath().startsWith("mineable/"))
+                        .collect(Collectors.toSet());
+                if (PREV_SLOT == -1) {
+                    PREV_SLOT = player.getInventory().selected;
+                }
+
+                if (mineables.isEmpty()) {
+                    float blockHardness = state.getDestroySpeed(player.level, pos);
+                    if (blockHardness > 0) {
                         for (ToolEntry entry : finalToolList) {
-                            for (ResourceLocation id : mineables) {
-                                //noinspection ConstantConditions
-                                if (Objects.equals(entry.getType().location(), id) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
-                                    this.switchTo(player, entry.getStack());
-                                    return;
-                                }
+                            if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {
+                                ResourceLocation id = entry.getType().location();
+                                mineables.add(id);
                             }
                         }
                     }
+                }
 
-                    if (heldItem.getItem().canBeDepleted()) {
-                        for (int i = 0; i < 9; i++) {
-                            ItemStack stack = player.getInventory().getItem(i);
-                            if (!stack.getItem().canBeDepleted()) {
-                                this.switchTo(player, i);
+                if (!mineables.isEmpty()) {
+                    for (ToolEntry entry : finalToolList) {
+                        for (ResourceLocation id : mineables) {
+                            //noinspection ConstantConditions
+                            if (Objects.equals(entry.getType().location(), id) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
+                                ClientToolSwap.switchTo(player, entry.getStack());
                                 return;
                             }
+                        }
+                    }
+                }
+
+                if (heldItem.getItem().canBeDepleted()) {
+                    for (int i = 0; i < 9; i++) {
+                        ItemStack stack = player.getInventory().getItem(i);
+                        if (!stack.getItem().canBeDepleted()) {
+                            ClientToolSwap.switchTo(player, i);
+                            return;
                         }
                     }
                 }
@@ -297,24 +308,16 @@ public class ClientToolSwap {
         }
     }
 
-    private void switchTo(LocalPlayer player, ItemStack stack) {
-        this.switchTo(player, player.getInventory().findSlotMatchingItem(stack));
+    private static void switchTo(LocalPlayer player, ItemStack stack) {
+        ClientToolSwap.switchTo(player, player.getInventory().findSlotMatchingItem(stack));
     }
 
-    private void switchTo(LocalPlayer player, int slotId) {
+    private static void switchTo(LocalPlayer player, int slotId) {
         if (player.getInventory().selected == slotId) {
             return;
         }
 
         player.getInventory().selected = slotId;
-    }
-
-    @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
-    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.player instanceof LocalPlayer player && PREV_SLOT != -1 && event.side.isClient() && !Minecraft.getInstance().options.keyAttack.isDown()) {
-            this.resetCurrentSlot(player);
-        }
     }
 
     private static boolean toolAboutBreaking(ItemStack stack) {
@@ -370,7 +373,7 @@ public class ClientToolSwap {
 
     private void resetCurrentSlot(LocalPlayer player) {
         if (PREV_SLOT >= 0) {
-            this.switchTo(player, PREV_SLOT);
+            ClientToolSwap.switchTo(player, PREV_SLOT);
             PREV_SLOT = -1;
         }
     }

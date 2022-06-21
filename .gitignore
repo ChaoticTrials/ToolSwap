@@ -11,3 +11,5 @@ build
 
 # other
 run*
+*.d.ts
+tsconfig.json
