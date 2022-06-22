@@ -14,7 +14,7 @@ function initializeCoreMod() {
                 var target = new coremods_1.InsnList();
                 target.add(new coremods_1.VarInsnNode(coremods_1.Opcodes.ALOAD, 0));
                 target.add(new coremods_1.VarInsnNode(coremods_1.Opcodes.ALOAD, 1));
-                target.add(coremods_1.ASMAPI.buildMethodCall('de/melanx/toolswap/ClientToolSwap', 'switchStuff', '(Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;Lnet/minecraft/core/BlockPos;)V', coremods_1.ASMAPI.MethodType.STATIC));
+                target.add(coremods_1.ASMAPI.buildMethodCall('de/melanx/toolswap/ClientToolSwap', 'searchForSwitching', '(Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;Lnet/minecraft/core/BlockPos;)V', coremods_1.ASMAPI.MethodType.STATIC));
                 coremods_1.ASMAPI.log('WARN', "LOL", []);
                 method.instructions.insert(target);
                 return method;

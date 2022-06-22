@@ -1,6 +1,5 @@
 package de.melanx.toolswap;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -63,7 +62,6 @@ public class ClientToolSwap {
 
     public static final Logger LOGGER = LogManager.getLogger(ClientToolSwap.class);
     public static final ToggleKeyMapping TOGGLE = new ToggleKeyMapping(ToolSwap.MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, "Automatic Tool Swap", () -> false);
-    private static final ImmutableList<TagKey<Block>> TOOL_TYPES = ImmutableList.of(BlockTags.MINEABLE_WITH_PICKAXE, BlockTags.MINEABLE_WITH_AXE, BlockTags.MINEABLE_WITH_SHOVEL, BlockTags.MINEABLE_WITH_HOE);
     private static final File CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("." + ToolSwap.MODID).toFile();
     private static int PREV_SLOT = -1;
     private static boolean TOGGLE_STATE = false;
@@ -172,10 +170,13 @@ public class ClientToolSwap {
                     return;
                 }
 
+                Set<TagKey<Block>> toolTypes = state.getTags()
+                        .filter(tag -> tag.location().getPath().startsWith("mineable/"))
+                        .collect(Collectors.toSet());
                 for (int i = 0; i < 9; i++) {
                     ItemStack stack = player.getInventory().getItem(i);
                     if (ClientToolSwap.toolAboutBreaking(stack)) continue;
-                    TOOL_TYPES.forEach(type -> {
+                    toolTypes.forEach(type -> {
                         if (stack.getItem() instanceof DiggerItem && type.location() == ((DiggerItem) stack.getItem()).blocks.location()) {
                             tools.add(new ToolEntry(type, stack));
                         }
