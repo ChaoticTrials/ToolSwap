@@ -94,7 +94,7 @@ public class ClientToolSwap {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void keyInput(InputEvent.KeyInputEvent event) {
-        if (event.getKey() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS) {
+        if (event.getKey() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS && Minecraft.getInstance().screen == null) {
             ClientToolSwap.handleInput();
         }
     }
@@ -102,7 +102,7 @@ public class ClientToolSwap {
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void mouseInput(InputEvent.MouseInputEvent event) {
-        if (event.getButton() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS) {
+        if (event.getButton() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS && Minecraft.getInstance().screen == null) {
             ClientToolSwap.handleInput();
         }
     }
