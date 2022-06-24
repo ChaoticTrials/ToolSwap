@@ -84,11 +84,7 @@ public class ClientToolSwap {
             }
             TOGGLE_STATE = !ClientToolSwap.getContent().equals("0");
             FileWriter writer = new FileWriter(CONFIG_FILE);
-            if (TOGGLE_STATE) {
-                writer.write("1");
-            } else {
-                writer.write("0");
-            }
+            writer.write(TOGGLE_STATE ? "1" : "0");
             writer.close();
         } catch (IOException e) {
             LOGGER.warn(e);
