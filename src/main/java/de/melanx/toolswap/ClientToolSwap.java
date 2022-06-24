@@ -78,10 +78,6 @@ public class ClientToolSwap {
         ClientRegistry.registerKeyBinding(TOGGLE);
         MinecraftForge.EVENT_BUS.register(this);
         try {
-            if (!CONFIG_FILE.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                CONFIG_FILE.createNewFile();
-            }
             TOGGLE_STATE = !ClientToolSwap.getContent().equals("0");
             FileWriter writer = new FileWriter(CONFIG_FILE);
             writer.write(TOGGLE_STATE ? "1" : "0");
@@ -158,7 +154,7 @@ public class ClientToolSwap {
             List<ItemStack> shears = Lists.newArrayList();
             BlockState state = level.getBlockState(pos);
             Block block = state.getBlock();
-            if (!player.isCrouching()) {
+            if (ClientConfig.sneakToPrevent.get() || !player.isCrouching()) {
                 if (!state.is(Blocks.COBWEB) &&
                         (ClientConfig.ignoreHarvestLevel.get()
                                 || heldItem.getItem() instanceof DiggerItem

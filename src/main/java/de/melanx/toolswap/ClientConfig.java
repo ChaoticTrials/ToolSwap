@@ -18,6 +18,7 @@ public class ClientConfig {
     public static ForgeConfigSpec.BooleanValue saveBreakingTools;
     public static ForgeConfigSpec.IntValue minDurability;
     public static ForgeConfigSpec.BooleanValue ignoreHarvestLevel;
+    public static ForgeConfigSpec.BooleanValue sneakToPrevent;
     public static ForgeConfigSpec.EnumValue<SortType> sortType;
 
     public static void init(ForgeConfigSpec.Builder builder) {
@@ -27,6 +28,8 @@ public class ClientConfig {
                 .defineInRange("min_durability", 1, 1, Integer.MAX_VALUE);
         ignoreHarvestLevel = builder.comment("If this is on, harvest level of tools will be ignored on breaking blocks. Otherwise it will always search for the lowest possible tool.")
                 .define("ignore_harvest_level", true);
+        sneakToPrevent = builder.comment("If this is on, sneaking will not swap your tool.")
+                .define("sneak_to_prevent", true);
         sortType = builder.comment("Set the mode in which order the tools will be chosen.",
                         "LEVEL = sorted by harvest level, lowest first",
                         "LEVEL_INVERTED = sorted by harvest level, highest first",
