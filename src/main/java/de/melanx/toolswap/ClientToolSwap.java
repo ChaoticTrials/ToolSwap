@@ -142,7 +142,7 @@ public class ClientToolSwap {
                 List<ItemStack> shears = Lists.newArrayList();
                 BlockState state = event.getState();
                 Block block = state.getBlock();
-                if (ClientConfig.sneakToPrevent.get() || !player.isCrouching()) {
+                if (ClientConfig.sneakToPrevent.get() || !player.isShiftKeyDown()) {
                     if (!state.is(Blocks.COBWEB) &&
                             (ClientConfig.ignoreHarvestLevel.get()
                                     || heldItem.getItem() instanceof DiggerItem
