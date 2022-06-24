@@ -1,6 +1,7 @@
 package de.melanx.toolswap;
 
 import com.google.common.collect.Lists;
+import de.melanx.toolswap.compat.TinkersCompat;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ToggleKeyMapping;
@@ -165,7 +166,11 @@ public class ClientToolSwap {
                         if (ClientToolSwap.toolAboutBreaking(stack)) continue;
                         blockToolTypes.forEach(type -> {
                             if (stack.getItem() instanceof DiggerItem && type.location() == ((DiggerItem) stack.getItem()).blocks.location()) {
-                                tools.add(new ToolEntry(type, stack));
+                                tools.add(new ToolEntry(type, stack, state));
+                            }
+
+                            if (TinkersCompat.isTinkersLoaded() && TinkersCompat.tinkers(type, stack)) {
+                                tools.add(new ToolEntry(type, stack, state));
                             }
                         });
                         if (stack.getItem() instanceof SwordItem) {
@@ -196,7 +201,7 @@ public class ClientToolSwap {
                             List<ToolEntry> enchanted = Lists.newArrayList();
                             List<ToolEntry> unenchanted = Lists.newArrayList();
                             tools.forEach(toolEntry -> {
-                                if (toolEntry.getStack().isEnchanted()) {
+                                if (toolEntry.stack().isEnchanted()) {
                                     enchanted.add(toolEntry);
                                 } else {
                                     unenchanted.add(toolEntry);
@@ -212,7 +217,7 @@ public class ClientToolSwap {
                             List<ToolEntry> enchanted = Lists.newArrayList();
                             List<ToolEntry> unenchanted = Lists.newArrayList();
                             tools.forEach(toolEntry -> {
-                                if (toolEntry.getStack().isEnchanted()) {
+                                if (toolEntry.stack().isEnchanted()) {
                                     enchanted.add(toolEntry);
                                 } else {
                                     unenchanted.add(toolEntry);
@@ -263,8 +268,8 @@ public class ClientToolSwap {
                         float blockHardness = state.getDestroySpeed(player.level, event.getPos());
                         if (blockHardness > 0) {
                             for (ToolEntry entry : finalToolList) {
-                                if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {
-                                    ResourceLocation id = entry.getType().location();
+                                if (entry.stack().getDestroySpeed(state) >= entry.getEfficiency()) {
+                                    ResourceLocation id = entry.type().location();
                                     mineables.add(id);
                                 }
                             }
@@ -274,9 +279,8 @@ public class ClientToolSwap {
                     if (!mineables.isEmpty()) {
                         for (ToolEntry entry : finalToolList) {
                             for (ResourceLocation id : mineables) {
-                                //noinspection ConstantConditions
-                                if (Objects.equals(entry.getType().location(), id) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
-                                    this.switchTo(player, entry.getStack());
+                                if (Objects.equals(entry.type().location(), id) && entry.getToolItem().isCorrectToolForDrops(entry.stack(), state)) {
+                                    this.switchTo(player, entry.stack());
                                     return;
                                 }
                             }

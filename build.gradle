@@ -3,3 +3,10 @@ buildscript {
 }
 
 apply from: 'https://noeppi-noeppi.github.io/ModUtils/v3/mod.gradle'
+apply plugin: 'io.github.noeppi_noeppi.tools.modgradle.cursedep'
+
+dependencies {
+    implementation curse.mod(74072, 3829979)
+    // Tinker's Construct 3.5.1.31 https://www.curseforge.com/minecraft/mc-mods/tinkers-construct
+    runtimeOnly curse.mod(74924, 3829975) // Mantle 1.9.27 https://www.curseforge.com/minecraft/mc-mods/mantle
+}
