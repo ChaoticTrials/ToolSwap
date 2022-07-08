@@ -29,8 +29,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.TierSortingRegistry;
@@ -75,7 +75,6 @@ public class ClientToolSwap {
     public ClientToolSwap() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
         ClientConfig.loadConfig(ClientConfig.CLIENT_CONFIG, FMLPaths.CONFIGDIR.get().resolve(ToolSwap.MODID + "-client.toml"));
-        ClientRegistry.registerKeyBinding(TOGGLE);
         MinecraftForge.EVENT_BUS.register(this);
         try {
             TOGGLE_STATE = !ClientToolSwap.getContent().equals("0");
@@ -89,7 +88,13 @@ public class ClientToolSwap {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void keyInput(InputEvent.KeyInputEvent event) {
+    public void onKeyRegistration(RegisterKeyMappingsEvent event) {
+        event.register(TOGGLE);
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void keyInput(InputEvent.Key event) {
         if (event.getKey() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS && Minecraft.getInstance().screen == null) {
             ClientToolSwap.handleInput();
         }
@@ -97,7 +102,7 @@ public class ClientToolSwap {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void mouseInput(InputEvent.MouseInputEvent event) {
+    public void mouseInput(InputEvent.MouseButton event) {
         if (event.getButton() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS && Minecraft.getInstance().screen == null) {
             ClientToolSwap.handleInput();
         }

@@ -13,9 +13,9 @@ repositories {
 }
 
 dependencies {
-    runtimeOnly curse.mod(237701, 3834622) // ReAuth
-    runtimeOnly fg.deobf("org.moddingx:LibX:1.19-4.0.4")
-    runtimeOnly fg.deobf("de.melanx:VanillaAIOTs:1.19-2.0.0")
+//    runtimeOnly curse.mod(237701, 3834622) // ReAuth
+//    runtimeOnly fg.deobf("org.moddingx:LibX:1.19-4.0.4")
+//    runtimeOnly fg.deobf("de.melanx:VanillaAIOTs:1.19-2.0.0")
 
     coremods 'org.moddingx:CoreModTypes:5.0.2-2'
 }
