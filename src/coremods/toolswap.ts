@@ -19,7 +19,6 @@ function initializeCoreMod(): CoreMods {
                     ASMAPI.MethodType.STATIC
                 ));
 
-                ASMAPI.log('WARN', "LOL", [])
                 method.instructions.insert(target);
                 return method;
             }

@@ -16,7 +16,7 @@ Swaps the tools to the effective one if it's in hotbar.
 [[dependencies.toolswap]]
     modId="forge"
     mandatory=true
-    versionRange="[41.0.15,)"
+    versionRange="[41.0.98,)"
     ordering="NONE"
     side="BOTH"
 
