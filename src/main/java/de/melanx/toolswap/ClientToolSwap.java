@@ -162,8 +162,8 @@ public class ClientToolSwap {
             if (ClientConfig.sneakToPrevent.get() || !player.isShiftKeyDown()) {
                 if (!state.is(Blocks.COBWEB) &&
                         (ClientConfig.ignoreHarvestLevel.get()
-                                || heldItem.getItem() instanceof DiggerItem
-                                && !TierSortingRegistry.isCorrectTierForDrops(((DiggerItem) heldItem.getItem()).getTier(), state))) {
+                                && heldItem.getItem() instanceof DiggerItem
+                                && TierSortingRegistry.isCorrectTierForDrops(((DiggerItem) heldItem.getItem()).getTier(), state))) {
                     return;
                 }
 
