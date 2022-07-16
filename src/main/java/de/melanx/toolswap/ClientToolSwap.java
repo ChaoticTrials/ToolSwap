@@ -39,6 +39,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -76,6 +77,7 @@ public class ClientToolSwap {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
         ClientConfig.loadConfig(ClientConfig.CLIENT_CONFIG, FMLPaths.CONFIGDIR.get().resolve(ToolSwap.MODID + "-client.toml"));
         MinecraftForge.EVENT_BUS.register(this);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onKeyRegistration);
         try {
             TOGGLE_STATE = !ClientToolSwap.getContent().equals("0");
             FileWriter writer = new FileWriter(CONFIG_FILE);
@@ -86,7 +88,6 @@ public class ClientToolSwap {
         }
     }
 
-    @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public void onKeyRegistration(RegisterKeyMappingsEvent event) {
         event.register(TOGGLE);
