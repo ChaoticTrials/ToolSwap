@@ -155,18 +155,12 @@ public class ClientToolSwap {
         }
 
         if (TOGGLE_STATE) {
-            List<ToolEntry> tools = Lists.newArrayList();
-            List<ItemStack> swords = Lists.newArrayList();
-            List<ItemStack> shears = Lists.newArrayList();
             BlockState state = level.getBlockState(pos);
             Block block = state.getBlock();
             if (!ClientConfig.sneakToPrevent.get() || !player.isShiftKeyDown()) {
-                if (!state.is(Blocks.COBWEB) &&
-                        (ClientConfig.ignoreHarvestLevel.get()
-                                && heldItem.getItem() instanceof DiggerItem
-                                && TierSortingRegistry.isCorrectTierForDrops(((DiggerItem) heldItem.getItem()).getTier(), state))) {
-                    return;
-                }
+                List<ToolEntry> tools = Lists.newArrayList();
+                List<ItemStack> swords = Lists.newArrayList();
+                List<ItemStack> shears = Lists.newArrayList();
 
                 Set<TagKey<Block>> toolTypes = state.getTags()
                         .filter(tag -> tag.location().getPath().startsWith("mineable/"))
@@ -174,11 +168,14 @@ public class ClientToolSwap {
                 for (int i = 0; i < 9; i++) {
                     ItemStack stack = player.getInventory().getItem(i);
                     if (ClientToolSwap.toolAboutBreaking(stack)) continue;
-                    toolTypes.forEach(type -> {
+                    for (TagKey<Block> type : toolTypes) {
                         if (stack.getItem() instanceof DiggerItem && type.location() == ((DiggerItem) stack.getItem()).blocks.location()) {
+                            if (heldItem == stack && ClientConfig.ignoreHarvestLevel.get() && !state.is(Blocks.COBWEB)) {
+                                return;
+                            }
                             tools.add(new ToolEntry(type, stack));
                         }
-                    });
+                    }
                     if (stack.getItem() instanceof SwordItem) {
                         swords.add(stack);
                     }
