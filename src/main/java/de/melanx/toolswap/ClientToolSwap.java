@@ -31,7 +31,6 @@ import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.Tags;
-import net.minecraftforge.common.TierSortingRegistry;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -137,18 +136,12 @@ public class ClientToolSwap {
             }
 
             if (TOGGLE_STATE) {
-                List<ToolEntry> tools = Lists.newArrayList();
-                List<ItemStack> swords = Lists.newArrayList();
-                List<ItemStack> shears = Lists.newArrayList();
                 BlockState state = event.getState();
                 Block block = state.getBlock();
                 if (!ClientConfig.sneakToPrevent.get() || !player.isShiftKeyDown()) {
-                    if (!state.is(Blocks.COBWEB) &&
-                            (ClientConfig.ignoreHarvestLevel.get()
-                                    || heldItem.getItem() instanceof DiggerItem
-                                    && !TierSortingRegistry.isCorrectTierForDrops(((DiggerItem) heldItem.getItem()).getTier(), state))) {
-                        return;
-                    }
+                    List<ToolEntry> tools = Lists.newArrayList();
+                    List<ItemStack> swords = Lists.newArrayList();
+                    List<ItemStack> shears = Lists.newArrayList();
 
                     Set<TagKey<Block>> blockToolTypes = state.getTags()
                             .filter(key -> key.location().getPath().startsWith("mineable/"))
@@ -156,15 +149,18 @@ public class ClientToolSwap {
                     for (int i = 0; i < 9; i++) {
                         ItemStack stack = player.getInventory().getItem(i);
                         if (ClientToolSwap.toolAboutBreaking(stack)) continue;
-                        blockToolTypes.forEach(type -> {
+                        for (TagKey<Block> type : blockToolTypes) {
                             if (stack.getItem() instanceof DiggerItem && type.location() == ((DiggerItem) stack.getItem()).blocks.location()) {
+                                if (heldItem == stack && ClientConfig.ignoreHarvestLevel.get() && !state.is(Blocks.COBWEB)) {
+                                    return;
+                                }
                                 tools.add(new ToolEntry(type, stack, state));
                             }
 
                             if (TinkersCompat.isTinkersLoaded() && TinkersCompat.tinkers(type, stack)) {
                                 tools.add(new ToolEntry(type, stack, state));
                             }
-                        });
+                        }
                         if (stack.getItem() instanceof SwordItem) {
                             swords.add(stack);
                         }
