@@ -25,11 +25,13 @@ public record ToolEntry(TagKey<Block> type,
 
     public int getHarvestLevel() {
         DiggerItem item = this.getToolItem();
+        //noinspection deprecation
         return item != null ? item.getTier().getLevel() : -1;
     }
 
     public float getEfficiency() {
         DiggerItem item = this.getToolItem();
+        //noinspection deprecation
         return item != null ? item.getTier().getLevel() : 0.0F;
     }
 
