@@ -128,7 +128,7 @@ public class ClientToolSwap {
                 List<ItemStack> swords = new ArrayList<>();
                 BlockState state = event.getState();
                 Block block = state.getBlock();
-                if (!player.isCrouching()) {
+                if (!ClientConfig.sneakToPrevent.get() || !player.isSneaking()) {
                     if (!state.isIn(Blocks.COBWEB) &&
                             (heldItem.getToolTypes().contains(block.getHarvestTool(state))
                                     && (ClientConfig.ignoreHarvestLevel.get()

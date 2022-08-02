@@ -18,6 +18,7 @@ public class ClientConfig {
     public static ForgeConfigSpec.BooleanValue saveBreakingTools;
     public static ForgeConfigSpec.IntValue minDurability;
     public static ForgeConfigSpec.BooleanValue ignoreHarvestLevel;
+    public static ForgeConfigSpec.BooleanValue sneakToPrevent;
     public static ForgeConfigSpec.EnumValue<SortType> sortType;
 
     public static void init(ForgeConfigSpec.Builder builder) {
@@ -27,13 +28,15 @@ public class ClientConfig {
                 .defineInRange("min_durability", 1, 1, Integer.MAX_VALUE);
         ignoreHarvestLevel = builder.comment("If this is on, harvest level of tools will be ignored on breaking blocks. Otherwise it will always search for the lowest possible tool.")
                 .define("ignore_harvest_level", false);
+        sneakToPrevent = builder.comment("If this is on, sneaking will not swap your tool.")
+                .define("sneak_to_prevent", true);
         sortType = builder.comment("Set the mode in which order the tools will be chosen.",
-                "LEVEL = sorted by harvest level, lowest first",
-                "LEVEL_INVERTED = sorted by harvest level, highest first",
-                "LEFT_TO_RIGHT = sorted from left to right",
-                "RIGHT_TO_LEFT = sorted from right to left",
-                "ENCHANTED_FIRST = sorted by harvest level, highest enchanted item first",
-                "ENCHANTED_LAST = sorted by harvest level, highest unenchanted item first")
+                        "LEVEL = sorted by harvest level, lowest first",
+                        "LEVEL_INVERTED = sorted by harvest level, highest first",
+                        "LEFT_TO_RIGHT = sorted from left to right",
+                        "RIGHT_TO_LEFT = sorted from right to left",
+                        "ENCHANTED_FIRST = sorted by harvest level, highest enchanted item first",
+                        "ENCHANTED_LAST = sorted by harvest level, highest unenchanted item first")
                 .defineEnum("sorttype", SortType.LEVEL);
     }
 
