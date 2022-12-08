@@ -9,7 +9,7 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -259,7 +259,7 @@ public class ClientToolSwap {
 
                 if (finalToolList.isEmpty()) return;
                 //noinspection deprecation
-                Set<ResourceLocation> mineables = Registry.BLOCK.getHolderOrThrow(block.builtInRegistryHolder().key()).tags()
+                Set<ResourceLocation> mineables = BuiltInRegistries.BLOCK.getHolderOrThrow(block.builtInRegistryHolder().key()).tags()
                         .map(TagKey::location)
                         .filter(location -> location.getPath().startsWith("mineable/"))
                         .collect(Collectors.toSet());
@@ -344,6 +344,7 @@ public class ClientToolSwap {
             //noinspection ConstantConditions
             controller.handleInventoryMouseClick(container.containerId, player.getInventory().selected + 36, 0, ClickType.PICKUP, player);
             controller.handleInventoryMouseClick(container.containerId, emptySlot, 0, ClickType.PICKUP, player);
+            controller.handleInventoryMouseClick(container.containerId, player.getInventory().selected + 36, 0, ClickType.PICKUP, player);
         } else {
             player.displayClientMessage(WARNING, true);
         }
@@ -352,13 +353,13 @@ public class ClientToolSwap {
     private static ItemStack findEqualTool(Inventory inventory, ItemStack stack) {
         if ((stack.getItem() instanceof DiggerItem item)) {
             //noinspection deprecation
-            Iterable<Holder<Block>> tagOrEmpty = Registry.BLOCK.getTagOrEmpty(item.blocks);
+            Iterable<Holder<Block>> tagOrEmpty = BuiltInRegistries.BLOCK.getTagOrEmpty(item.blocks);
             if (!tagOrEmpty.iterator().hasNext()) {
                 return stack;
             }
 
             for (ItemStack tool : inventory.items) {
-                if (tool.sameItemStackIgnoreDurability(stack) && !ClientToolSwap.toolAboutBreaking(tool)) {
+                if (tool.getItem() == stack.getItem() && !ClientToolSwap.toolAboutBreaking(tool)) {
                     return tool;
                 }
             }
