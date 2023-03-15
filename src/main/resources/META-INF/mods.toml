@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion = "[44,)"
+loaderVersion = "[45,)"
 license = "Apache 2.0"
 
 [[mods]]
@@ -16,13 +16,13 @@ Swaps the tools to the effective one if it's in hotbar.
 [[dependencies.toolswap]]
     modId="forge"
     mandatory=true
-    versionRange="[44.0.0,)"
+    versionRange="[45.0.0,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.toolswap]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.3, 1.20)"
+    versionRange="[1.19.4, 1.20)"
     ordering="NONE"
     side="BOTH"
