@@ -103,7 +103,7 @@ public class ClientToolSwap {
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void mouseInput(InputEvent.MouseButton event) {
+    public void mouseInput(InputEvent.MouseButton.Post event) {
         if (event.getButton() == TOGGLE.getKey().getValue() && event.getAction() == GLFW.GLFW_PRESS && Minecraft.getInstance().screen == null) {
             ClientToolSwap.handleInput();
         }
