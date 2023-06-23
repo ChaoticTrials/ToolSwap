@@ -268,7 +268,7 @@ public class ClientToolSwap {
                 }
 
                 if (mineables.isEmpty()) {
-                    float blockHardness = state.getDestroySpeed(player.level, pos);
+                    float blockHardness = state.getDestroySpeed(player.level(), pos);
                     if (blockHardness > 0) {
                         for (ToolEntry entry : finalToolList) {
                             if (entry.getStack().getDestroySpeed(state) >= entry.getEfficiency()) {

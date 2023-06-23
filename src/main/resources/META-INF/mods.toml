@@ -1,10 +1,11 @@
 modLoader="javafml"
-loaderVersion = "[45,)"
+loaderVersion="[${fml},)"
 license = "Apache 2.0"
+issueTrackerURL="https://github.com/MelanX/ToolSwap/issues"
 
 [[mods]]
 modId="toolswap"
-version="${file.jarVersion}"
+version="${version}"
 displayName="ToolSwap"
 updateJSONURL="https://assets.melanx.de/updates/automatic-tool-swap.json"
 authors="MelanX"
@@ -16,13 +17,13 @@ Swaps the tools to the effective one if it's in hotbar.
 [[dependencies.toolswap]]
     modId="forge"
     mandatory=true
-    versionRange="[45.0.0,)"
+    versionRange="[${forge},)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.toolswap]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.4, 1.20)"
+    versionRange="[${minecraft},)"
     ordering="NONE"
     side="BOTH"
