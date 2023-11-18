@@ -20,6 +20,7 @@ public class ClientConfig {
     public static ForgeConfigSpec.BooleanValue ignoreHarvestLevel;
     public static ForgeConfigSpec.BooleanValue sneakToPrevent;
     public static ForgeConfigSpec.EnumValue<SortType> sortType;
+    public static ForgeConfigSpec.EnumValue<IgnoreMode> ignoreEmptyHand;
 
     public static void init(ForgeConfigSpec.Builder builder) {
         saveBreakingTools = builder.comment("If this is on, tool with 1 durability left will be saved. Only works for BREAKING a block, not stripping, flattening, or tilting.")
@@ -31,13 +32,20 @@ public class ClientConfig {
         sneakToPrevent = builder.comment("If this is on, sneaking will not swap your tool.")
                 .define("sneak_to_prevent", true);
         sortType = builder.comment("Set the mode in which order the tools will be chosen.",
-                        "LEVEL = sorted by harvest level, lowest first",
-                        "LEVEL_INVERTED = sorted by harvest level, highest first",
-                        "LEFT_TO_RIGHT = sorted from left to right",
-                        "RIGHT_TO_LEFT = sorted from right to left",
-                        "ENCHANTED_FIRST = sorted by harvest level, highest enchanted item first",
-                        "ENCHANTED_LAST = sorted by harvest level, highest unenchanted item first")
+                        "  LEVEL = sorted by harvest level, lowest first",
+                        "  LEVEL_INVERTED = sorted by harvest level, highest first",
+                        "  LEFT_TO_RIGHT = sorted from left to right",
+                        "  RIGHT_TO_LEFT = sorted from right to left",
+                        "  ENCHANTED_FIRST = sorted by harvest level, highest enchanted item first",
+                        "  ENCHANTED_LAST = sorted by harvest level, highest unenchanted item first")
                 .defineEnum("sorttype", SortType.LEVEL);
+        ignoreEmptyHand = builder.comment("Choose the mode when swapping is fine:",
+                        "  ALWAYS = Always swap, ignore item in hand",
+                        "  EMPTY_HAND = Only swap if your hand is empty",
+                        "  ITEMS = Only swap if you hold any item",
+                        "  TOOLS = Only swap if you hold any tool (items with tag \"minecraft:tools\")",
+                        "  NO_TOOLS = Only swap if you hold any item excluding tools (items with tag \"minecraft:tools\")")
+                .defineEnum("ignore_empty_hand", IgnoreMode.ALWAYS);
     }
 
     public static void loadConfig(ForgeConfigSpec spec, Path path) {
@@ -45,5 +53,13 @@ public class ClientConfig {
         final CommentedFileConfig configData = CommentedFileConfig.builder(path).sync().autosave().writingMode(WritingMode.REPLACE).build();
         configData.load();
         spec.setConfig(configData);
+    }
+
+    public enum IgnoreMode {
+        ALWAYS,
+        EMPTY_HAND,
+        ITEMS,
+        TOOLS,
+        NO_TOOLS
     }
 }

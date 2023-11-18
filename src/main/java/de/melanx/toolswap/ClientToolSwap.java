@@ -15,6 +15,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -154,7 +155,7 @@ public class ClientToolSwap {
             ClientToolSwap.saveItem(player);
         }
 
-        if (TOGGLE_STATE) {
+        if (TOGGLE_STATE && !ClientToolSwap.shouldIgnore(heldItem)) {
             BlockState state = level.getBlockState(pos);
             Block block = state.getBlock();
             if (!ClientConfig.sneakToPrevent.get() || !player.isShiftKeyDown()) {
@@ -348,6 +349,16 @@ public class ClientToolSwap {
         } else {
             player.displayClientMessage(WARNING, true);
         }
+    }
+
+    private static boolean shouldIgnore(ItemStack heldItem) {
+        return !switch (ClientConfig.ignoreEmptyHand.get()) {
+            case EMPTY_HAND -> heldItem.isEmpty();
+            case ITEMS -> !heldItem.isEmpty();
+            case TOOLS -> heldItem.is(ItemTags.TOOLS);
+            case NO_TOOLS -> !heldItem.is(ItemTags.TOOLS);
+            default -> true;
+        };
     }
 
     private static ItemStack findEqualTool(Inventory inventory, ItemStack stack) {
