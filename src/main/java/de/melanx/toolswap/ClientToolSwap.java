@@ -300,7 +300,12 @@ public class ClientToolSwap {
                     for (ToolEntry entry : finalToolList) {
                         for (ResourceLocation id : mineables) {
                             //noinspection ConstantConditions
-                            if (Objects.equals(entry.getType().location(), id) && TierSortingRegistry.isCorrectTierForDrops(entry.getToolItem().getTier(), state)) {
+                            DiggerLike diggerItem = entry.getToolItem();
+                            if (diggerItem == null) {
+                                continue;
+                            }
+
+                            if (Objects.equals(entry.getType().location(), id) && TierSortingRegistry.isCorrectTierForDrops(diggerItem.getTier(), state)) {
                                 ClientToolSwap.switchTo(player, entry.getStack());
                                 return;
                             }

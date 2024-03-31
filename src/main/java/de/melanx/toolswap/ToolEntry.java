@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.Block;
 import javax.annotation.Nullable;
 
 public record ToolEntry(TagKey<Block> type,
-                        ItemStack stack) {
+        ItemStack stack) {
 
     public TagKey<Block> getType() {
         return this.type;
@@ -19,20 +19,23 @@ public record ToolEntry(TagKey<Block> type,
     }
 
     @Nullable
-    public DiggerItem getToolItem() {
-        return this.stack.getItem() instanceof DiggerItem item ? item : null;
+    public DiggerLike getToolItem() {
+        if (this.stack.getItem() instanceof DiggerLike diggerLike) {
+            return diggerLike;
+        }
+
+        return this.stack.getItem() instanceof DiggerItem diggerItem ? diggerItem::getTier : null;
     }
 
     public int getHarvestLevel() {
-        DiggerItem item = this.getToolItem();
+        DiggerLike item = this.getToolItem();
         //noinspection deprecation
         return item != null ? item.getTier().getLevel() : -1;
     }
 
     public float getEfficiency() {
-        DiggerItem item = this.getToolItem();
-        //noinspection deprecation
-        return item != null ? item.getTier().getLevel() : 0.0F;
+        DiggerLike item = this.getToolItem();
+        return item != null ? item.getTier().getSpeed() : 0.0F;
     }
 
     @Override
