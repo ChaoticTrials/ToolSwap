@@ -262,7 +262,7 @@ public class ClientToolSwap {
                     return;
                 }
 
-                if (state.is(BlockTags.WOOL)) {
+                if (state.is(BlockTags.WOOL) || state.is(BlockTags.LEAVES)) {
                     if (shears.isEmpty()) {
                         return;
                     }
