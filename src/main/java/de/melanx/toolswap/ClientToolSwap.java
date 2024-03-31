@@ -187,6 +187,10 @@ public class ClientToolSwap {
                             continue;
                         }
 
+                        if (!stack.is(toolTypeTag)) {
+                            continue;
+                        }
+
                         if (heldItem == stack && ClientConfig.ignoreHarvestLevel.get() && !state.is(Blocks.COBWEB)) {
                             return;
                         }
