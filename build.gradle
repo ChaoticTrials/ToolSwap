@@ -17,5 +17,8 @@ dependencies {
 //    runtimeOnly fg.deobf("org.moddingx:LibX:1.19-4.0.4")
 //    runtimeOnly fg.deobf("de.melanx:VanillaAIOTs:1.19-2.0.0")
 
+//    runtimeOnly curse.mod(297039, 5199286) // Silent Gear 1.20.1-3.6.3
+//    runtimeOnly curse.mod(242998, 4585754) // Silent Lib 1.20.1-8.0.0
+
     coremods 'org.moddingx:CoreModTypes:5.0.2-2'
 }

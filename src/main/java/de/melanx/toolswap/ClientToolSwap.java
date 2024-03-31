@@ -23,6 +23,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.level.block.Block;
@@ -53,10 +54,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -65,6 +63,12 @@ public class ClientToolSwap {
     public static final Logger LOGGER = LogManager.getLogger(ClientToolSwap.class);
     public static final ToggleKeyMapping TOGGLE = new ToggleKeyMapping(ToolSwap.MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, "Automatic Tool Swap", () -> false);
     private static final File CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("." + ToolSwap.MODID).toFile();
+    private static final Map<TagKey<Block>, TagKey<Item>> MINEABLE_TO_TOOL = Map.of(
+            BlockTags.MINEABLE_WITH_AXE, ItemTags.AXES,
+            BlockTags.MINEABLE_WITH_HOE, ItemTags.HOES,
+            BlockTags.MINEABLE_WITH_PICKAXE, ItemTags.PICKAXES,
+            BlockTags.MINEABLE_WITH_SHOVEL, ItemTags.SHOVELS
+    );
     private static int PREV_SLOT = -1;
     private static boolean TOGGLE_STATE = false;
     public static MutableComponent WARNING;
@@ -168,14 +172,26 @@ public class ClientToolSwap {
                         .collect(Collectors.toSet());
                 for (int i = 0; i < 9; i++) {
                     ItemStack stack = player.getInventory().getItem(i);
-                    if (ClientToolSwap.toolAboutBreaking(stack)) continue;
+                    if (ClientToolSwap.toolAboutBreaking(stack)) {
+                        continue;
+                    }
+
                     for (TagKey<Block> type : toolTypes) {
-                        if (stack.getItem() instanceof DiggerItem && type.location() == ((DiggerItem) stack.getItem()).blocks.location()) {
-                            if (heldItem == stack && ClientConfig.ignoreHarvestLevel.get() && !state.is(Blocks.COBWEB)) {
-                                return;
-                            }
-                            tools.add(new ToolEntry(type, stack));
+                        if (!stack.is(ItemTags.TOOLS)) {
+                            continue;
                         }
+
+                        TagKey<Item> toolTypeTag = MINEABLE_TO_TOOL.get(type);
+                        if (toolTypeTag == null) {
+                            LOGGER.warn("Unhandled block tag: " + type);
+                            continue;
+                        }
+
+                        if (heldItem == stack && ClientConfig.ignoreHarvestLevel.get() && !state.is(Blocks.COBWEB)) {
+                            return;
+                        }
+
+                        tools.add(new ToolEntry(type, stack));
                     }
                     if (stack.getItem() instanceof SwordItem) {
                         swords.add(stack);
