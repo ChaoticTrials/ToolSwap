@@ -21,6 +21,7 @@ public class ClientConfig {
     public static ForgeConfigSpec.BooleanValue sneakToPrevent;
     public static ForgeConfigSpec.EnumValue<SortType> sortType;
     public static ForgeConfigSpec.EnumValue<IgnoreMode> ignoreEmptyHand;
+    public static ForgeConfigSpec.EnumValue<SwapMode> swapMode;
 
     public static void init(ForgeConfigSpec.Builder builder) {
         saveBreakingTools = builder.comment("If this is on, tool with 1 durability left will be saved. Only works for BREAKING a block, not stripping, flattening, or tilting.")
@@ -46,6 +47,10 @@ public class ClientConfig {
                         "  TOOLS = Only swap if you hold any tool (items with tag \"minecraft:tools\")",
                         "  NO_TOOLS = Only swap if you hold any item excluding tools (items with tag \"minecraft:tools\")")
                 .defineEnum("ignore_empty_hand", IgnoreMode.ALWAYS);
+        swapMode = builder.comment("Choose the mode for how to detect items",
+                        "  TAG = Default, best for modpacks with other tool mods",
+                        "  VANILLA = If TAG mode doesn't work, try vanilla mode on vanilla servers")
+                .defineEnum("swap_mode", SwapMode.TAG);
     }
 
     public static void loadConfig(ForgeConfigSpec spec, Path path) {
@@ -61,5 +66,10 @@ public class ClientConfig {
         ITEMS,
         TOOLS,
         NO_TOOLS
+    }
+
+    public enum SwapMode {
+        TAG,
+        VANILLA
     }
 }

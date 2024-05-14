@@ -23,8 +23,8 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.DiggerItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -54,7 +54,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -63,12 +67,6 @@ public class ClientToolSwap {
     public static final Logger LOGGER = LogManager.getLogger(ClientToolSwap.class);
     public static final ToggleKeyMapping TOGGLE = new ToggleKeyMapping(ToolSwap.MODID + ".key.toggle_toolswap_mode", GLFW.GLFW_KEY_G, "Automatic Tool Swap", () -> false);
     private static final File CONFIG_FILE = FMLPaths.CONFIGDIR.get().resolve("." + ToolSwap.MODID).toFile();
-    private static final Map<TagKey<Block>, TagKey<Item>> MINEABLE_TO_TOOL = Map.of(
-            BlockTags.MINEABLE_WITH_AXE, ItemTags.AXES,
-            BlockTags.MINEABLE_WITH_HOE, ItemTags.HOES,
-            BlockTags.MINEABLE_WITH_PICKAXE, ItemTags.PICKAXES,
-            BlockTags.MINEABLE_WITH_SHOVEL, ItemTags.SHOVELS
-    );
     private static int PREV_SLOT = -1;
     private static boolean TOGGLE_STATE = false;
     public static MutableComponent WARNING;
@@ -139,7 +137,7 @@ public class ClientToolSwap {
         if (Minecraft.getInstance().player != null) {
             Minecraft.getInstance().player.displayClientMessage(statusMessage, true);
         }
-        LOGGER.debug("Set tool swap mode to " + TOGGLE_STATE);
+        LOGGER.debug("Set tool swap mode to {}", TOGGLE_STATE);
     }
 
     public static void searchForSwitching(MultiPlayerGameMode multiPlayerGameMode, BlockPos pos) {
@@ -172,22 +170,22 @@ public class ClientToolSwap {
                         .collect(Collectors.toSet());
                 for (int i = 0; i < 9; i++) {
                     ItemStack stack = player.getInventory().getItem(i);
+                    if (ClientConfig.swapMode.get() == ClientConfig.SwapMode.TAG && !stack.is(ItemTags.TOOLS)) {
+                        continue;
+                    }
+
                     if (ClientToolSwap.toolAboutBreaking(stack)) {
                         continue;
                     }
 
                     for (TagKey<Block> type : toolTypes) {
-                        if (!stack.is(ItemTags.TOOLS)) {
+                        Predicate<ItemStack> stackPredicate = ClientToolSwap.predicateFor(type);
+                        if (stackPredicate == null) {
+                            LOGGER.warn("Unhandled block tag: {}", type);
                             continue;
                         }
 
-                        TagKey<Item> toolTypeTag = MINEABLE_TO_TOOL.get(type);
-                        if (toolTypeTag == null) {
-                            LOGGER.warn("Unhandled block tag: " + type);
-                            continue;
-                        }
-
-                        if (!stack.is(toolTypeTag)) {
+                        if (stackPredicate.test(stack)) {
                             continue;
                         }
 
@@ -409,6 +407,50 @@ public class ClientToolSwap {
             ClientToolSwap.switchTo(player, PREV_SLOT);
             PREV_SLOT = -1;
         }
+    }
+
+    private static Predicate<ItemStack> predicateFor(TagKey<Block> blockTag) {
+        if (ClientConfig.swapMode.get() == ClientConfig.SwapMode.TAG) {
+            if (blockTag == BlockTags.MINEABLE_WITH_AXE) {
+                return stack -> !stack.is(ItemTags.AXES);
+            }
+
+            if (blockTag == BlockTags.MINEABLE_WITH_HOE) {
+                return stack -> !stack.is(ItemTags.HOES);
+            }
+
+            if (blockTag == BlockTags.MINEABLE_WITH_PICKAXE) {
+                return stack -> !stack.is(ItemTags.PICKAXES);
+            }
+
+            if (blockTag == BlockTags.MINEABLE_WITH_SHOVEL) {
+                return stack -> !stack.is(ItemTags.SHOVELS);
+            }
+
+            return null;
+        }
+
+        if (blockTag == BlockTags.MINEABLE_WITH_AXE) {
+            return stack -> !stack.is(Items.WOODEN_AXE) && !stack.is(Items.STONE_AXE) && !stack.is(Items.IRON_AXE)
+                    && !stack.is(Items.GOLDEN_AXE) && !stack.is(Items.DIAMOND_AXE) && !stack.is(Items.NETHERITE_AXE);
+        }
+
+        if (blockTag == BlockTags.MINEABLE_WITH_HOE) {
+            return stack -> !stack.is(Items.WOODEN_HOE) && !stack.is(Items.STONE_HOE) && !stack.is(Items.IRON_HOE)
+                    && !stack.is(Items.GOLDEN_HOE) && !stack.is(Items.DIAMOND_HOE) && !stack.is(Items.NETHERITE_HOE);
+        }
+
+        if (blockTag == BlockTags.MINEABLE_WITH_PICKAXE) {
+            return stack -> !stack.is(Items.WOODEN_PICKAXE) && !stack.is(Items.STONE_PICKAXE) && !stack.is(Items.IRON_PICKAXE)
+                    && !stack.is(Items.GOLDEN_PICKAXE) && !stack.is(Items.DIAMOND_PICKAXE) && !stack.is(Items.NETHERITE_PICKAXE);
+        }
+
+        if (blockTag == BlockTags.MINEABLE_WITH_SHOVEL) {
+            return stack -> !stack.is(Items.WOODEN_SHOVEL) && !stack.is(Items.STONE_SHOVEL) && !stack.is(Items.IRON_SHOVEL)
+                    && !stack.is(Items.GOLDEN_SHOVEL) && !stack.is(Items.DIAMOND_SHOVEL) && !stack.is(Items.NETHERITE_SHOVEL);
+        }
+
+        return null;
     }
 
     private static void toggleMode() {
