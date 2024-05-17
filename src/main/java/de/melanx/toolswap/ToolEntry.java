@@ -1,8 +1,8 @@
 package de.melanx.toolswap;
 
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.level.block.Block;
 
 import javax.annotation.Nullable;
@@ -24,7 +24,7 @@ public record ToolEntry(TagKey<Block> type,
             return diggerLike;
         }
 
-        return this.stack.getItem() instanceof DiggerItem diggerItem ? diggerItem::getTier : null;
+        return this.stack.getItem() instanceof TieredItem tieredItem ? tieredItem::getTier : null;
     }
 
     public int getHarvestLevel() {
