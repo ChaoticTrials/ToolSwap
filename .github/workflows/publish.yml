@@ -49,7 +49,7 @@ jobs:
           arguments: clean build publish curseforge modrinth --no-configuration-cache
         env:
           GIT_COMMIT: ${{ github.sha }}
-          GIT_PREVIOUS_COMMIT: $GIT_PREVIOUS_COMMIT
+          GIT_PREVIOUS_COMMIT: ${{ github.event.before }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
