@@ -1,29 +1,25 @@
-package de.melanx.toolswap;
+package de.melanx.toolswap.config;
 
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.core.io.WritingMode;
-import net.minecraftforge.common.ForgeConfigSpec;
-
-import java.nio.file.Path;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ClientConfig {
-    public static final ForgeConfigSpec CLIENT_CONFIG;
-    private static final ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
+
+    public static final ModConfigSpec CLIENT_CONFIG;
+    private static final ModConfigSpec.Builder CLIENT_BUILDER = new ModConfigSpec.Builder();
 
     static {
         init(CLIENT_BUILDER);
         CLIENT_CONFIG = CLIENT_BUILDER.build();
     }
 
-    public static ForgeConfigSpec.BooleanValue saveBreakingTools;
-    public static ForgeConfigSpec.IntValue minDurability;
-    public static ForgeConfigSpec.BooleanValue ignoreHarvestLevel;
-    public static ForgeConfigSpec.BooleanValue sneakToPrevent;
-    public static ForgeConfigSpec.EnumValue<SortType> sortType;
-    public static ForgeConfigSpec.EnumValue<IgnoreMode> ignoreEmptyHand;
-    public static ForgeConfigSpec.EnumValue<SwapMode> swapMode;
+    public static ModConfigSpec.BooleanValue saveBreakingTools;
+    public static ModConfigSpec.IntValue minDurability;
+    public static ModConfigSpec.BooleanValue ignoreHarvestLevel;
+    public static ModConfigSpec.BooleanValue sneakToPrevent;
+    public static ModConfigSpec.EnumValue<SortType> sortType;
+    public static ModConfigSpec.EnumValue<IgnoreMode> ignoreEmptyHand;
 
-    public static void init(ForgeConfigSpec.Builder builder) {
+    public static void init(ModConfigSpec.Builder builder) {
         saveBreakingTools = builder.comment("If this is on, tool with 1 durability left will be saved. Only works for BREAKING a block, not stripping, flattening, or tilting.")
                 .define("save", false);
         minDurability = builder.comment("If items should be saved, this is the minimum durability which they are allowed to have.")
@@ -47,17 +43,6 @@ public class ClientConfig {
                         "  TOOLS = Only swap if you hold any tool (items with tag \"minecraft:tools\")",
                         "  NO_TOOLS = Only swap if you hold any item excluding tools (items with tag \"minecraft:tools\")")
                 .defineEnum("ignore_empty_hand", IgnoreMode.ALWAYS);
-        swapMode = builder.comment("Choose the mode for how to detect items",
-                        "  TAG = Default, best for modpacks with other tool mods",
-                        "  VANILLA = If TAG mode doesn't work, try vanilla mode on vanilla servers")
-                .defineEnum("swap_mode", SwapMode.TAG);
-    }
-
-    public static void loadConfig(ForgeConfigSpec spec, Path path) {
-        ToolSwap.LOGGER.debug("Loading config file {}", path);
-        final CommentedFileConfig configData = CommentedFileConfig.builder(path).sync().autosave().writingMode(WritingMode.REPLACE).build();
-        configData.load();
-        spec.setConfig(configData);
     }
 
     public enum IgnoreMode {
@@ -68,8 +53,12 @@ public class ClientConfig {
         NO_TOOLS
     }
 
-    public enum SwapMode {
-        TAG,
-        VANILLA
+    public enum SortType {
+        LEVEL,
+        LEVEL_INVERTED,
+        LEFT_TO_RIGHT,
+        RIGHT_TO_LEFT,
+        ENCHANTED_FIRST,
+        ENCHANTED_LAST
     }
 }

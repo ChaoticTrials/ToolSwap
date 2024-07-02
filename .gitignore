@@ -1,3 +1,11 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
 # idea
 out
 *.ipr
@@ -10,6 +18,14 @@ build
 .gradle
 
 # other
-run*
+eclipse
+/run*
+/logs
+
+# Files from Forge MDK
+forge*changelog.txt
+/src/generated/resources/.cache
+
+# CoreMods
 *.d.ts
-tsconfig.json
+**/tsconfig.json
