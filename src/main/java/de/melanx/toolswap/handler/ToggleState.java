@@ -31,6 +31,12 @@ public class ToggleState {
 
     private void load() {
         try {
+            if (Files.notExists(SWAP_STATE_FILE)) {
+                Files.writeString(SWAP_STATE_FILE, "true");
+                this.shouldSwapTools = true;
+                return;
+            }
+
             String s = Files.readString(SWAP_STATE_FILE);
             this.shouldSwapTools = Boolean.parseBoolean(s);
         } catch (IOException e) {
