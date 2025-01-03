@@ -18,6 +18,7 @@ public class ClientConfig {
     public static ModConfigSpec.BooleanValue sneakToPrevent;
     public static ModConfigSpec.EnumValue<SortType> sortType;
     public static ModConfigSpec.EnumValue<IgnoreMode> ignoreEmptyHand;
+    public static ModConfigSpec.BooleanValue oneBlockMode;
 
     public static void init(ModConfigSpec.Builder builder) {
         saveBreakingTools = builder.comment("If this is on, tool with 1 durability left will be saved. Only works for BREAKING a block, not stripping, flattening, or tilting.")
@@ -43,6 +44,8 @@ public class ClientConfig {
                         "  TOOLS = Only swap if you hold any tool (items with tag \"minecraft:tools\")",
                         "  NO_TOOLS = Only swap if you hold any item excluding tools (items with tag \"minecraft:tools\")")
                 .defineEnum("ignore_empty_hand", IgnoreMode.ALWAYS);
+        oneBlockMode = builder.comment("Enable this option when playing OneBlock. It continuously searches for the most suitable tool every tick while mining, rather than only when a new block is targeted.")
+                .define("one_block_mode", false);
     }
 
     public enum IgnoreMode {

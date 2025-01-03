@@ -2,6 +2,7 @@ package de.melanx.toolswap.handler;
 
 import de.melanx.toolswap.SwapKeys;
 import de.melanx.toolswap.ToolSwap;
+import de.melanx.toolswap.config.ClientConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -43,7 +44,7 @@ public class EventHandler {
     }
 
     private void leftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
-        if (event.getAction() == PlayerInteractEvent.LeftClickBlock.Action.START) {
+        if (event.getAction() == PlayerInteractEvent.LeftClickBlock.Action.START || ClientConfig.oneBlockMode.get()) {
             ToolSwap.getInstance().searchForSwitching(event.getLevel(), event.getEntity(), event.getPos());
         }
     }
