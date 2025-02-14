@@ -3,5 +3,22 @@
   "toolswap.key.toggle_toolswap_notification": "Werkzeugwechselmodus",
   "toolswap.key.toggle_toolswap_notification.state_on": "ein",
   "toolswap.key.toggle_toolswap_notification.state_off": "aus",
-  "toolswap.warning": "KEIN FREIER SLOT, UM ZERBRECHENDES ITEM ZU RETTEN"
+  "toolswap.warning": "KEIN FREIER SLOT, UM ZERBRECHENDES ITEM ZU RETTEN",
+
+  "toolswap.configuration.sneak_to_prevent": "Sneaken, um Werkzeugwechsel zu verhindern",
+  "toolswap.configuration.min_durability": "Minimale Haltbarkeit, um Werkzeuge zu speichern",
+  "toolswap.configuration.save": "Brechende Werkzeuge speichern",
+  "toolswap.configuration.ignore_harvest_level": "Erntelevel beim Werkzeugwechsel ignorieren",
+  "toolswap.configuration.one_block_mode": "OneBlock-Modus",
+  "toolswap.configuration.sorttype": "Sortiermodus für Werkzeugauswahl",
+  "toolswap.configuration.ignore_empty_hand": "Modus für Werkzeugwechsel mit Gegenständen in der Hand",
+  "toolswap.configuration.min_durability.tooltip": "Legt die minimale Haltbarkeit eines Werkzeugs fest, damit es gespeichert wird, wenn es fast zerstört ist.",
+  "toolswap.configuration.one_block_mode.tooltip": "Aktivieren, um während des Abbaus kontinuierlich nach dem besten Werkzeug zu suchen.",
+  "toolswap.configuration.sorttype.tooltip": "Wählen Sie, wie Werkzeuge für die Auswahl sortiert werden:\nLEVEL = sortiert nach Erntelevel, niedrigstes zuerst\nLEVEL_INVERTED = sortiert nach Erntelevel, höchstes zuerst\nLEFT_TO_RIGHT = von links nach rechts sortiert\nRIGHT_TO_LEFT = von rechts nach links sortiert\nENCHANTED_FIRST = Verzauberte Werkzeuge werden priorisiert\nENCHANTED_LAST = Nicht verzauberte Werkzeuge werden priorisiert",
+  "toolswap.configuration.save.tooltip": "Aktivieren, um Werkzeuge mit niedriger Haltbarkeit beim Blockabbau zu speichern.",
+  "toolswap.configuration.section.toolswap.client.toml.title": "ToolSwap Client-Konfiguration",
+  "toolswap.configuration.sneak_to_prevent.tooltip": "Aktivieren, um Werkzeugwechsel während des Sneakens zu verhindern.",
+  "toolswap.configuration.title": "ToolSwap",
+  "toolswap.configuration.ignore_harvest_level.tooltip": "Aktivieren, um Erntelevel bei der Werkzeugauswahl zu ignorieren.",
+  "toolswap.configuration.ignore_empty_hand.tooltip": "Wählen Sie, wann Werkzeuge basierend auf Gegenständen in Ihrer Hand gewechselt werden können:\nALWAYS = Immer wechseln\nEMPTY_HAND = Nur wechseln, wenn Ihre Hand leer ist\nITEMS = Wechseln, wenn Sie einen Gegenstand halten\nTOOLS = Wechseln, wenn Sie ein Werkzeug halten\nNO_TOOLS = Nur wechseln, wenn Sie einen Nicht-Werkzeug-Gegenstand halten"
 }
