@@ -1,29 +1,29 @@
-modLoader="javafml"
-loaderVersion="${loader_version_range}"
-license="${license}"
-issueTrackerURL="https://github.com/ChaoticTrials/ToolSwap/issues"
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "${mod.license}"
+issueTrackerURL = "${mod.issue_url}"
 
 [[mods]]
-modId="${modid}"
-version="${mod_version}"
-displayName="ToolSwap"
-updateJSONURL="https://assets.melanx.de/updates/automatic-tool-swap.json"
-displayURL="https://modrinth.com/user/MelanX"
-authors="MelanX"
-description="""
+modId = "${mod.modid}"
+version = "${mod.version}"
+displayName="${mod.name}"
+displayURL = "${mod.source_url}"
+updateJSONURL = "https://assets.melanx.de/updates/automatic-tool-swap.json"
+authors = "MelanX"
+description = """
 Swaps the tools to the effective one when it's in hotbar.
 """
 
-[[dependencies.${modid}]]
+[[dependencies.${ mod.modid }]]
    modId = "neoforge"
    type = "required"
-   versionRange = "[${neo_version},)"
-   ordering="NONE"
-   side="BOTH"
+   versionRange = "[${mod.neoforge},)"
+   ordering = "NONE"
+   side = "BOTH"
 
-[[dependencies.${modid}]]
-   modId="minecraft"
-   type="required"
-   versionRange="[${minecraft_version},)"
-   ordering="NONE"
-   side="BOTH"
+[[dependencies.${ mod.modid }]]
+   modId = "minecraft"
+   type = "required"
+   versionRange = "[${mod.minecraft},)"
+   ordering = "NONE"
+   side = "BOTH"
