@@ -27,7 +27,7 @@ public class ToggleHandler {
     }
 
     public void setPreviousSlot(LocalPlayer player) {
-        this.setPreviousSlot(player.getInventory().selected);
+        this.setPreviousSlot(player.getInventory().getSelectedSlot());
     }
 
     public void setPreviousSlot(int slotId) {
@@ -56,12 +56,12 @@ public class ToggleHandler {
             return;
         }
 
-        if (player.getInventory().selected == slotId) {
+        if (player.getInventory().getSelectedSlot() == slotId) {
             return;
         }
 
-        this.setPreviousSlot(player.getInventory().selected);
-        player.getInventory().selected = slotId;
+        this.setPreviousSlot(player.getInventory().getSelectedSlot());
+        player.getInventory().setSelectedSlot(slotId);
     }
 
     public boolean switchIfPossible(LocalPlayer player, BlockState state, List<ToolEntry> toolEntries) {

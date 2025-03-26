@@ -1,5 +1,5 @@
 plugins {
-    id 'org.moddingx.modgradle.meta' version '5.0.2'
+    id 'org.moddingx.modgradle.meta' version '5.0.3'
 }
 
 repositories {
@@ -10,8 +10,7 @@ repositories {
 }
 
 var dev = System.getenv('IS_DEV')?.toBoolean() ?: false
-var baseVersion = '21.0'
-var modBaseVersion = '1.21-6.0'
+var baseVersion = '21.5'
 
 mod.configure {
     modid 'toolswap'
@@ -21,12 +20,12 @@ mod.configure {
             def gitCommitHash = ['git', 'rev-parse', 'HEAD'].execute().text.trim()
             constant baseVersion + (gitCommitHash ? "-${gitCommitHash}" : '')
         } else {
-            base modBaseVersion
+            base baseVersion
             maven 'https://maven.melanx.de/release'
         }
     }
 
-    neoforge project.hasProperty('neo_version') ? project.neo_version : "${baseVersion}.167"
+    neoforge project.hasProperty('neo_version') ? project.neo_version : "${baseVersion}.0-beta"
 
     license 'The Apache License, Version 2.0'
     github 'ChaoticTrials/ToolSwap'
@@ -56,11 +55,7 @@ mod.configure {
     upload {
         all {
             type 'release'
-            version '1.21'
-            version '1.21.1'
-            version '1.21.2'
-            version '1.21.3'
-            version '1.21.4'
+            version '1.21.5'
         }
         curseforge {
             projectId 361977

@@ -47,7 +47,7 @@ public class Util {
         AbstractContainerMenu container = player.containerMenu;
         int emptySlot = -1;
 
-        ItemStack currentTool = player.getInventory().getItem(player.getInventory().selected);
+        ItemStack currentTool = player.getInventory().getItem(player.getInventory().getSelectedSlot());
         ItemStack equalTool = Util.findEqualTool(player.getInventory(), currentTool);
         if (currentTool != equalTool) {
             emptySlot = player.getInventory().findSlotMatchingItem(equalTool);
@@ -64,9 +64,9 @@ public class Util {
 
         if (emptySlot != -1) {
             //noinspection ConstantConditions
-            controller.handleInventoryMouseClick(container.containerId, player.getInventory().selected + 36, 0, ClickType.PICKUP, player);
+            controller.handleInventoryMouseClick(container.containerId, player.getInventory().getSelectedSlot() + 36, 0, ClickType.PICKUP, player);
             controller.handleInventoryMouseClick(container.containerId, emptySlot, 0, ClickType.PICKUP, player);
-            controller.handleInventoryMouseClick(container.containerId, player.getInventory().selected + 36, 0, ClickType.PICKUP, player);
+            controller.handleInventoryMouseClick(container.containerId, player.getInventory().getSelectedSlot() + 36, 0, ClickType.PICKUP, player);
         } else {
             player.displayClientMessage(Util.WARNING, true);
         }
@@ -104,7 +104,7 @@ public class Util {
             //noinspection DataFlowIssue
             List<Tool.Rule> rules = tool.rules();
 
-            for (ItemStack item : inventory.items) {
+            for (ItemStack item : inventory.getNonEquipmentItems()) {
                 //noinspection DataFlowIssue
                 if (Util.validItem(item) && item.get(DataComponents.TOOL).rules() == rules) {
                     return item;
