@@ -40,6 +40,7 @@ public class EventHandler {
     }
 
     private void onKeyRegistration(RegisterKeyMappingsEvent event) {
+        event.registerCategory(SwapKeys.TOOLSWAP_KEYS);
         event.register(SwapKeys.TOGGLE.get());
     }
 

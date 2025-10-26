@@ -68,7 +68,7 @@ public final class ToolSwap {
         }
 
         //noinspection ConstantConditions
-        if (!Objects.equals(localPlayer.getGameProfile().getId(), Minecraft.getInstance().player.getGameProfile().getId())) {
+        if (!Objects.equals(localPlayer.getGameProfile().id(), Minecraft.getInstance().player.getGameProfile().id())) {
             return;
         }
 
