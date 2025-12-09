@@ -10,7 +10,7 @@ repositories {
 }
 
 var dev = System.getenv('IS_DEV')?.toBoolean() ?: false
-var baseVersion = '21.9'
+var baseVersion = '21.11'
 
 mod.configure {
     modid 'toolswap'
@@ -25,7 +25,7 @@ mod.configure {
         }
     }
 
-    neoforge project.hasProperty('neo_version') ? project.neo_version : "${baseVersion}.0-beta"
+    neoforge "${baseVersion}.0-beta"
 
     license 'The Apache License, Version 2.0'
     github 'ChaoticTrials/ToolSwap'
@@ -55,8 +55,7 @@ mod.configure {
     upload {
         all {
             type 'release'
-            version '1.21.9'
-            version '1.21.10'
+            version '1.21.11'
         }
         curseforge {
             projectId 361977
