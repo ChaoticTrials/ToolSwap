@@ -63,7 +63,7 @@ public class EventHandler {
             statusMessage.append(": ").append(state);
 
             if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(statusMessage, true);
+                Minecraft.getInstance().player.sendOverlayMessage(statusMessage);
             }
 
             LOGGER.debug("Set tool swap mode to {}", shouldSwapTools);

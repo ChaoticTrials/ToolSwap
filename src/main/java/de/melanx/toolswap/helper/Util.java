@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.Tool;
@@ -44,31 +44,36 @@ public class Util {
         }
 
         MultiPlayerGameMode controller = Minecraft.getInstance().gameMode;
-        AbstractContainerMenu container = player.containerMenu;
-        int emptySlot = -1;
+        AbstractContainerMenu container = player.inventoryMenu;
+        int emptySlot = Inventory.NOT_FOUND_INDEX;
 
         ItemStack currentTool = player.getInventory().getItem(player.getInventory().getSelectedSlot());
         ItemStack equalTool = Util.findEqualTool(player.getInventory(), currentTool);
         if (currentTool != equalTool) {
-            emptySlot = player.getInventory().findSlotMatchingItem(equalTool);
-        }
-
-        if (emptySlot == -1) {
             for (Slot slot : container.slots) {
-                if (slot.index > 9 && slot.getItem().isEmpty()) {
+                if (slot.getItem() == equalTool) {
                     emptySlot = slot.index;
                     break;
                 }
             }
         }
 
-        if (emptySlot != -1) {
+        if (emptySlot == Inventory.NOT_FOUND_INDEX) {
+            for (Slot slot : container.slots) {
+                if (slot.index >= 9 && slot.getItem().isEmpty()) {
+                    emptySlot = slot.index;
+                    break;
+                }
+            }
+        }
+
+        if (emptySlot != Inventory.NOT_FOUND_INDEX) {
             //noinspection ConstantConditions
-            controller.handleInventoryMouseClick(container.containerId, player.getInventory().getSelectedSlot() + 36, 0, ClickType.PICKUP, player);
-            controller.handleInventoryMouseClick(container.containerId, emptySlot, 0, ClickType.PICKUP, player);
-            controller.handleInventoryMouseClick(container.containerId, player.getInventory().getSelectedSlot() + 36, 0, ClickType.PICKUP, player);
+            controller.handleContainerInput(container.containerId, player.getInventory().getSelectedSlot() + 36, 0, ContainerInput.PICKUP, player);
+            controller.handleContainerInput(container.containerId, emptySlot, 0, ContainerInput.PICKUP, player);
+            controller.handleContainerInput(container.containerId, player.getInventory().getSelectedSlot() + 36, 0, ContainerInput.PICKUP, player);
         } else {
-            player.displayClientMessage(Util.WARNING, true);
+            player.sendOverlayMessage(Util.WARNING);
         }
     }
 
