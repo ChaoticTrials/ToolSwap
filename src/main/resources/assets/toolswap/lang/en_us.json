@@ -1,4 +1,5 @@
 {
+  "key.category.toolswap.toolswap_keys": "Automatic Tool Swap",
   "toolswap.key.toggle_toolswap_mode": "Toggle tool swap mode",
   "toolswap.key.toggle_toolswap_notification": "Tool swap mode",
   "toolswap.key.toggle_toolswap_notification.state_on": "on",
