@@ -1,5 +1,5 @@
 plugins {
-    id 'org.moddingx.modgradle.meta' version '5.1.1'
+    id 'org.moddingx.modgradle.meta' version '5.1.4'
 }
 
 repositories {
@@ -11,7 +11,7 @@ repositories {
 
 var dev = System.getenv('IS_DEV')?.toBoolean() ?: false
 var releaseType = 'release'
-var baseVersion = '26.1'
+var baseVersion = '26.2'
 
 mod.configure {
     modid 'toolswap'
@@ -26,7 +26,7 @@ mod.configure {
         }
     }
 
-    neoforge "${baseVersion}.0.1-beta"
+    neoforge "${baseVersion}.0.7-beta"
 
     license 'The Apache License, Version 2.0'
     github 'ChaoticTrials/ToolSwap'
@@ -56,9 +56,7 @@ mod.configure {
     upload {
         all {
             type releaseType
-            version '26.1'
-            version '26.1.1'
-            version '26.1.2'
+            version '26.2'
         }
         curseforge {
             projectId 361977
