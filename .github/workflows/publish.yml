@@ -2,9 +2,6 @@ name: publish
 
 on:
   push:
-    branches:
-      - '[0-9]*'   # only include relevant branches, ignore e.g. 'feat/*'
-      - '!1.*'     # ignore old branches before 26.1
 
 permissions:
   contents: read
