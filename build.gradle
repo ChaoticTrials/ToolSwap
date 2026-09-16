@@ -11,7 +11,7 @@ repositories {
 
 var dev = System.getenv('IS_DEV')?.toBoolean() ?: false
 var releaseType = 'release'
-var baseVersion = '26.2'
+var baseVersion = '26.3'
 
 mod.configure {
     modid 'toolswap'
@@ -26,7 +26,7 @@ mod.configure {
         }
     }
 
-    neoforge "${baseVersion}.0.7-beta"
+    neoforge "${baseVersion}.0.1-beta"
 
     license 'The Apache License, Version 2.0'
     github 'ChaoticTrials/ToolSwap'
@@ -57,7 +57,7 @@ mod.configure {
         all {
             type releaseType
             environmentType 'client_only'
-            version '26.2'
+            version '26.3'
         }
         curseforge {
             projectId 361977
