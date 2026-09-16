@@ -10,6 +10,8 @@ displayName="${mod.name}"
 displayURL = "${mod.source_url}"
 updateJSONURL = "https://assets.melanx.de/updates/automatic-tool-swap.json"
 authors = "MelanX"
+bannerFile = "${mod.modid}_logo.png"
+iconFile = "${mod.modid}_icon.png"
 description = """
 Swaps the tools to the effective one when it's in hotbar.
 """
