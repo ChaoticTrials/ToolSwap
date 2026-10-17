@@ -19,6 +19,7 @@ public class ClientConfig {
     public static ModConfigSpec.EnumValue<SortType> sortType;
     public static ModConfigSpec.EnumValue<IgnoreMode> ignoreEmptyHand;
     public static ModConfigSpec.BooleanValue oneBlockMode;
+    public static ModConfigSpec.IntValue swapCooldownTicks;
 
     public static void init(ModConfigSpec.Builder builder) {
         saveBreakingTools = builder.comment("If this is on, tool with 1 durability left will be saved. Only works for BREAKING a block, not stripping, flattening, or tilting.")
@@ -46,6 +47,10 @@ public class ClientConfig {
                 .defineEnum("ignore_empty_hand", IgnoreMode.ALWAYS);
         oneBlockMode = builder.comment("Enable this option when playing OneBlock. It continuously searches for the most suitable tool every tick while mining, rather than only when a new block is targeted.")
                 .define("one_block_mode", false);
+        swapCooldownTicks = builder.comment("Number of client ticks (20 ticks = 1 second) to wait after a tool swap before another swap is allowed.",
+                        "Helps on high ping servers or with instant break blocks, where the slot change packet and the block break packet could otherwise reach the server in the wrong order.",
+                        "Set to 0 to disable the cooldown.")
+                .defineInRange("swap_cooldown_ticks", 3, 0, 20);
     }
 
     public enum IgnoreMode {

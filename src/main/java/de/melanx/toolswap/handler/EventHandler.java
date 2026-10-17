@@ -51,6 +51,8 @@ public class EventHandler {
     }
 
     private void onClientTick(ClientTickEvent.Post event) {
+        ToolSwap.getInstance().getToggleHandler().tickCooldown();
+
         while (SwapKeys.TOGGLE.get().consumeClick()) {
             ToolSwap.getInstance().getToggleState().toggleConfig();
             boolean shouldSwapTools = ToolSwap.getInstance().getToggleState().shouldSwapTools();

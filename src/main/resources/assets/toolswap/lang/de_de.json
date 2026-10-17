@@ -11,6 +11,8 @@
   "toolswap.configuration.save": "Brechende Werkzeuge speichern",
   "toolswap.configuration.ignore_harvest_level": "Erntelevel beim Werkzeugwechsel ignorieren",
   "toolswap.configuration.one_block_mode": "OneBlock-Modus",
+  "toolswap.configuration.swap_cooldown_ticks": "Wechsel Cooldown (Ticks)",
+  "toolswap.configuration.swap_cooldown_ticks.tooltip": "Ticks, die nach einem Werkzeugwechsel gewartet werden, bevor erneut gewechselt wird (20 Ticks = 1 Sekunde). Auf Servern mit hohem Ping erhöhen, falls Blöcke manchmal nicht abgebaut werden. 0 deaktiviert den Cooldown.",
   "toolswap.configuration.sorttype": "Sortiermodus für Werkzeugauswahl",
   "toolswap.configuration.ignore_empty_hand": "Modus für Werkzeugwechsel mit Gegenständen in der Hand",
   "toolswap.configuration.min_durability.tooltip": "Legt die minimale Haltbarkeit eines Werkzeugs fest, damit es gespeichert wird, wenn es fast zerstört ist.",

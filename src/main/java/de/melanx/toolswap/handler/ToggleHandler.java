@@ -1,5 +1,6 @@
 package de.melanx.toolswap.handler;
 
+import de.melanx.toolswap.config.ClientConfig;
 import de.melanx.toolswap.helper.ToolEntry;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -13,9 +14,11 @@ public class ToggleHandler {
     public static final int INVALID_SLOT = -1;
     private static ToggleHandler INSTANCE;
     private int previousSlot;
+    private int cooldownTicksLeft;
 
     private ToggleHandler() {
         this.previousSlot = INVALID_SLOT;
+        this.cooldownTicksLeft = 0;
     }
 
     public static ToggleHandler initialize() {
@@ -62,6 +65,17 @@ public class ToggleHandler {
 
         this.setPreviousSlot(player.getInventory().getSelectedSlot());
         player.getInventory().setSelectedSlot(slotId);
+        this.cooldownTicksLeft = ClientConfig.swapCooldownTicks.get();
+    }
+
+    public boolean isOnCooldown() {
+        return this.cooldownTicksLeft > 0;
+    }
+
+    public void tickCooldown() {
+        if (this.cooldownTicksLeft > 0) {
+            this.cooldownTicksLeft--;
+        }
     }
 
     public boolean switchIfPossible(LocalPlayer player, BlockState state, List<ToolEntry> toolEntries) {

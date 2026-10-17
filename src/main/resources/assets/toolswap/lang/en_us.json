@@ -11,6 +11,8 @@
   "toolswap.configuration.save": "Save breaking tools",
   "toolswap.configuration.ignore_harvest_level": "Ignore harvest level when swapping tools",
   "toolswap.configuration.one_block_mode": "One Block Mode",
+  "toolswap.configuration.swap_cooldown_ticks": "Swap cooldown (ticks)",
+  "toolswap.configuration.swap_cooldown_ticks.tooltip": "Ticks to wait after a tool swap before swapping again (20 ticks = 1 second). Increase this on high-ping servers if blocks sometimes don't break. 0 disables the cooldown.",
   "toolswap.configuration.sorttype": "Tool selection sort mode",
   "toolswap.configuration.ignore_empty_hand": "Mode for swapping with tools in hand",
   "toolswap.configuration.min_durability.tooltip": "Set the minimum durability a tool must have to be saved when it's about to break.",
