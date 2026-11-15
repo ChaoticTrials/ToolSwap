@@ -42,8 +42,14 @@ public class ToggleHandler {
     }
 
     public void resetSlot(LocalPlayer player) {
-        this.switchTo(player, this.previousSlot);
+        int slotId = this.previousSlot;
         this.previousSlot = INVALID_SLOT;
+
+        if (slotId == INVALID_SLOT || player.getInventory().getSelectedSlot() == slotId) {
+            return;
+        }
+
+        player.getInventory().setSelectedSlot(slotId);
     }
 
     public int getSlot() {

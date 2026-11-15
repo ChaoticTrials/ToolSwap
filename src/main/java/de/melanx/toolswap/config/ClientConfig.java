@@ -49,8 +49,9 @@ public class ClientConfig {
                 .define("one_block_mode", false);
         swapCooldownTicks = builder.comment("Number of client ticks (20 ticks = 1 second) to wait after a tool swap before another swap is allowed.",
                         "Helps on high ping servers or with instant break blocks, where the slot change packet and the block break packet could otherwise reach the server in the wrong order.",
+                        "Only active when one_block_mode is on.",
                         "Set to 0 to disable the cooldown.")
-                .defineInRange("swap_cooldown_ticks", 3, 0, 20);
+                .defineInRange("swap_cooldown_ticks", 3, 0, 500);
     }
 
     public enum IgnoreMode {
