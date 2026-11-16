@@ -75,6 +75,10 @@ public final class ToolSwap {
         ItemStack heldItem = localPlayer.getMainHandItem();
         Util.saveItem(localPlayer);
 
+        if (ClientConfig.oneBlockMode.get() && this.toggleHandler.isOnCooldown()) {
+            return;
+        }
+
         if (!this.toggleState.shouldSwapTools() || Util.shouldIgnore(heldItem)) {
             return;
         }
